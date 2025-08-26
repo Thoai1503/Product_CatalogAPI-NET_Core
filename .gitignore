@@ -1,6 +1,21 @@
-﻿namespace CatalogServiceAPI_Electric_Store
-{
-    public class _
-    {
-    }
-}
+﻿# Build results
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+
+# User-specific files
+*.user
+*.suo
+
+# Logs
+*.log
+
+# Config
+appsettings.*.json
+secrets.json
+
+# OS files
+[Dd]esktop.ini
+[Tt]humbs.db

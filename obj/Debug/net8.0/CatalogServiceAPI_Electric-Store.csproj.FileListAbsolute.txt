@@ -168,3 +168,5 @@ C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Security.Cryptography.ProtectedData.dll
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\bin\Debug\net8.0\runtimes\win\lib\net6.0\System.Windows.Extensions.dll
+C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\obj\Debug\net8.0\CatalogServiceAPI_Electric-Store.sourcelink.json
+C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt

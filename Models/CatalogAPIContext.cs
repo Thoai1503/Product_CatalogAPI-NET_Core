@@ -26,6 +26,37 @@ public partial class CatalogAPIContext : DbContext
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
 
+    public override int SaveChanges()
+    {
+        SetCategoryLevel();
+        return base.SaveChanges();
+    }
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SetCategoryLevel();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void SetCategoryLevel()
+    {
+        foreach (var entry in ChangeTracker.Entries<Category>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                if (entry.Entity.ParentId == null|| entry.Entity.ParentId == 0)
+                {
+                    entry.Entity.Level = 0;
+                }
+                else
+                {
+                    var parent = Categories.Find(entry.Entity.ParentId);
+                    entry.Entity.Level = parent != null ? parent.Level + 1 : 0;
+                }
+            }
+        }
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Brand>(entity =>
