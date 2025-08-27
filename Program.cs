@@ -1,5 +1,17 @@
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()      // Cho phép m?i domain
+              .AllowAnyMethod()      // Cho phép m?i HTTP Method (GET, POST, PUT, DELETE...)
+              .AllowAnyHeader();     // Cho phép m?i header
+    });
+});
+
+
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -19,6 +31,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+app.MapGet("/", () => "Hello World");
 
 app.MapControllers();
 
