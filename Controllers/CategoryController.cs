@@ -12,9 +12,10 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
     {
         // GET: api/<CategoryController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            var category = CategoryRepository.Instance.GetAll();
+            return Ok(category);
         }
 
         // GET api/<CategoryController>/5

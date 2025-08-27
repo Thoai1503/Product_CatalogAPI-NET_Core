@@ -68,8 +68,28 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public HashSet<CategoryView> GetAll()
         {
-            throw new NotImplementedException();
-        }
+            try {
+                var cate = _context.Categories.Select(c => new CategoryView
+                {
+                    id = c.Id,
+                    name = c.Name,
+                    slug = c.Slug,
+                    parent_id = c.ParentId ?? 0,
+                    level = c.Level,
+                    path = c.Path,
+
+
+                }).ToHashSet();
+                return cate;
+                 }
+            catch (Exception ex)
+            {
+                return new HashSet<CategoryView>();
+              
+            }
+
+
+}
 
         public bool Update(CategoryView entity)
         {
