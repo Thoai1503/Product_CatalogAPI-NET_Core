@@ -1,7 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CatalogServiceAPI_Electric_Store.Helper;
 using CatalogServiceAPI_Electric_Store.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 namespace CatalogServiceAPI_Electric_Store.Models;
 
@@ -28,34 +29,33 @@ public partial class CatalogAPIContext : DbContext
 
     public override int SaveChanges()
     {
-        SetCategoryLevel();
-        return base.SaveChanges();
-    }
-
-    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        SetCategoryLevel();
-        return await base.SaveChangesAsync(cancellationToken);
-    }
-
-    private void SetCategoryLevel()
-    {
         foreach (var entry in ChangeTracker.Entries<Category>())
         {
-            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            if (entry.State == EntityState.Added)
             {
-                if (entry.Entity.ParentId == null|| entry.Entity.ParentId == 0)
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(entry.Entity.Name);
+
+                // set level
+                if (entry.Entity.ParentId == null)
                 {
                     entry.Entity.Level = 0;
+                    entry.Entity.Path = "/" + entry.Entity.Slug;
                 }
                 else
                 {
                     var parent = Categories.Find(entry.Entity.ParentId);
                     entry.Entity.Level = parent != null ? parent.Level + 1 : 0;
+                    entry.Entity.Path = parent != null
+                        ? parent.Path + "/" + entry.Entity.Slug
+                        : "/" + entry.Entity.Slug;
                 }
             }
         }
+
+        return base.SaveChanges();
     }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

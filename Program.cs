@@ -30,8 +30,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowAll");
+
+
 app.UseAuthorization();
-app.MapGet("/", () => "Hello World");
+app.MapGet("/", () => "Hello World! This is my project API");
 
 app.MapControllers();
 
