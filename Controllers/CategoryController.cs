@@ -29,8 +29,8 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpPost]
         public IActionResult Post(CategoryView cate)
         {
-            var result = CategoryRepository.Instance.Create(cate);
-            if (!result)
+            var result = CategoryRepository.Instance.CreateAndReturn(cate);
+            if (result ==null)
             {
                 return BadRequest();
             }
@@ -45,8 +45,14 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // DELETE api/<CategoryController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+           var re = CategoryRepository.Instance.Delete(id);
+            if (!re)
+            {
+                return NotFound();
+            }
+            return Ok(re);
         }
         [HttpGet("slug/{slug}")]
         public ActionResult<string> GetBySlug(string slug)

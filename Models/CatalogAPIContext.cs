@@ -34,7 +34,7 @@ public partial class CatalogAPIContext : DbContext
             if (entry.State == EntityState.Added)
             {
                 // set slug từ name
-                entry.Entity.Slug = SlugHelper.Slugify(entry.Entity.Name);
+                entry.Entity.Slug = SlugHelper.Slugify(StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name));
 
                 // set level
                 if (entry.Entity.ParentId == null)

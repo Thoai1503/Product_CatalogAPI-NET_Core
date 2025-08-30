@@ -50,11 +50,63 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 return false;
             }
         }
+        public CategoryView CreateAndReturn(CategoryView entity)
+        {
+            try
+            {
+                var category = new Category
+                {
+                    Name = entity.name,
+                    Slug = entity.slug,
+                    ParentId = entity.parent_id,
+                    Path = entity.path,
+                    Level = entity.level != 0 ? entity.level : 0,
+                    CreatedAt = DateTime.Now,
+                };
+
+                _context.Categories.Add(category);
+                _context.SaveChanges();
+
+                return new CategoryView
+                {
+                    id = category.Id,
+                    name = category.Name,
+                    slug = category.Slug,
+                    parent_id =(int) category.ParentId,
+                    path = category.Path,
+                    level = category.Level
+                };
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+
 
         public bool Delete(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var entity = _context.Categories.SingleOrDefault(c => c.Id == id);
+
+                if (entity == null)
+                {
+                    return false; // Nothing to delete
+                }
+
+                _context.Categories.Remove(entity);
+                _context.SaveChanges();
+
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
+
 
         public CategoryView FindById(int id)
         {
