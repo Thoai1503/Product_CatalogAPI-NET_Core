@@ -31,12 +31,14 @@ public partial class CatalogAPIContext : DbContext
     {
         foreach (var entry in ChangeTracker.Entries<Category>())
         {
-            if (entry.State == EntityState.Added)
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
             {
                 // set slug từ name
-                entry.Entity.Slug = SlugHelper.Slugify(StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name));
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
 
-                // set level
+                // set level + path
                 if (entry.Entity.ParentId == null)
                 {
                     entry.Entity.Level = 0;
@@ -44,7 +46,11 @@ public partial class CatalogAPIContext : DbContext
                 }
                 else
                 {
-                    var parent = Categories.Find(entry.Entity.ParentId);
+                    // dùng AsNoTracking để tránh bị track trùng
+                    var parent = Categories
+                        .AsNoTracking()
+                        .FirstOrDefault(c => c.Id == entry.Entity.ParentId);
+
                     entry.Entity.Level = parent != null ? parent.Level + 1 : 0;
                     entry.Entity.Path = parent != null
                         ? parent.Path + "/" + entry.Entity.Slug
@@ -55,6 +61,7 @@ public partial class CatalogAPIContext : DbContext
 
         return base.SaveChanges();
     }
+
 
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

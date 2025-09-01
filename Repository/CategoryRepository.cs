@@ -110,9 +110,35 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public CategoryView FindById(int id)
         {
-            throw new NotImplementedException();
-        }
 
+            try
+            {
+                var category = _context.Categories.SingleOrDefault(
+                    c => c.Id == id);
+                if (category == null)
+                {
+                    return null;
+                }
+                return new CategoryView
+                {
+                    id = category.Id,
+                    name = category.Name,
+                    slug = category.Slug,
+                    parent_id = (int)category.ParentId,
+                    path = category.Path,
+                    level = category.Level
+                };
+
+            }
+            catch
+            {
+                return null ;
+            }
+        }
+        public Category GetEntityById(int id)
+        {
+            return _context.Categories.SingleOrDefault(c => c.Id == id);
+        }
         public HashSet<CategoryView> FindByKeywork(string keywork)
         {
             throw new NotImplementedException();
@@ -142,6 +168,20 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
 
 }
+
+        public bool Update(Category entity)
+        {
+            try
+            {
+                _context.Categories.Update(entity); // entity đã được tracking
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
         public bool Update(CategoryView entity)
         {

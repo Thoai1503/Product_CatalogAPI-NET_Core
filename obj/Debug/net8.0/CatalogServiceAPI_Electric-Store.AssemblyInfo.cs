@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CatalogServiceAPI_Electric-Store")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+000fba6a463fc358f9d76ec5acd9cbc554514a29")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4d37ca61aa4f12a61983435c0b08359554c5dbe8")]
 [assembly: System.Reflection.AssemblyProductAttribute("CatalogServiceAPI_Electric-Store")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CatalogServiceAPI_Electric-Store")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

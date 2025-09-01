@@ -1,4 +1,5 @@
-﻿using CatalogServiceAPI_Electric_Store.Models.ModelView;
+﻿using CatalogServiceAPI_Electric_Store.Models.Entities;
+using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,9 +40,25 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // PUT api/<CategoryController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Put(int id, CategoryView cate)
         {
+            var en = CategoryRepository.Instance.GetEntityById(id); // EF đang track en
+            if (en != null)
+            {
+                // update trực tiếp
+                en.Name = cate.name;
+                en.Slug = cate.slug;
+                en.ParentId = cate.parent_id;
+                en.Path = cate.path;
+                en.Level = cate.level;
+                en.CreatedAt = DateTime.Now;
+
+                var result = CategoryRepository.Instance.Update(en);
+                return Ok(result);
+            }
+            return NotFound();
         }
+
 
         // DELETE api/<CategoryController>/5
         [HttpDelete("{id}")]
