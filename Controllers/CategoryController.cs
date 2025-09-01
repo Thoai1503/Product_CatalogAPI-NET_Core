@@ -39,7 +39,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         }
 
         // PUT api/<CategoryController>/5
-        [HttpPut("{id}")]
+        [HttpPost("{id}")]
         public IActionResult Put(int id, CategoryView cate)
         {
             var en = CategoryRepository.Instance.GetEntityById(id); // EF đang track en
