@@ -11,11 +11,18 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
     [ApiController]
     public class CategoryController : ControllerBase
     {
+        private readonly CategoryRepository _categoryRepository;
+
+        public CategoryController(CategoryRepository categoryRepository)
+        {
+            _categoryRepository = categoryRepository;
+        }
+
         // GET: api/<CategoryController>
         [HttpGet]
         public IActionResult Get()
         {
-            var category = CategoryRepository.Instance.GetAll();
+            var category = _categoryRepository.GetAll();
             return Ok(category);
         }
 
@@ -30,7 +37,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpPost]
         public IActionResult Post(CategoryView cate)
         {
-            var result = CategoryRepository.Instance.CreateAndReturn(cate);
+            var result = _categoryRepository.CreateAndReturn(cate);
             if (result ==null)
             {
                 return BadRequest();
@@ -42,18 +49,18 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpPost("{id}")]
         public IActionResult Put(int id, CategoryView cate)
         {
-            var en = CategoryRepository.Instance.GetEntityById(id); // EF đang track en
+            var en = _categoryRepository.GetEntityById(id); // EF đang track en
             if (en != null)
             {
                 // update trực tiếp
-                en.Name = cate.name;
+                en.Name = en.Name;
                 en.Slug = cate.slug;
                 en.ParentId = cate.parent_id;
                 en.Path = cate.path;
                 en.Level = cate.level;
                 en.CreatedAt = DateTime.Now;
 
-                var result = CategoryRepository.Instance.Update(en);
+                var result = _categoryRepository.Update(en);
                 return Ok(result);
             }
             return NotFound();
@@ -64,7 +71,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-           var re = CategoryRepository.Instance.Delete(id);
+           var re = _categoryRepository.Delete(id);
             if (!re)
             {
                 return NotFound();

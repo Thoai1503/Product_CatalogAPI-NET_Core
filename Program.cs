@@ -1,3 +1,7 @@
+using CatalogServiceAPI_Electric_Store.Models;
+using CatalogServiceAPI_Electric_Store.Repository;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
@@ -18,6 +22,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<CatalogAPIContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<CategoryRepository>(); //  ??ng ký CategoryRepository v?i DI container
+builder.Services.AddScoped<AttributeRepository>();
 
 var app = builder.Build();
 

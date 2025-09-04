@@ -7,24 +7,13 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 {
     public class CategoryRepository : IRepository<CategoryView>
     {
-        private static CategoryRepository _instance;
-            private readonly CatalogAPIContext _context;
+        private readonly CatalogAPIContext _context;
 
-            private CategoryRepository()
+        public CategoryRepository(CatalogAPIContext context)
         {
-            _context = new CatalogAPIContext();
+            _context = context;
         }
-        public static CategoryRepository Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    _instance = new CategoryRepository();
-                }
-                return _instance;
-            }
-        }
+ 
         public bool Create(CategoryView entity)
         {
             try

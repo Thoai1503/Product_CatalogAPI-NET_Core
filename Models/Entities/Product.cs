@@ -3,19 +3,21 @@ using System.Collections.Generic;
 
 namespace CatalogServiceAPI_Electric_Store.Models.Entities;
 
-public partial class Category
+public partial class Product
 {
     public int Id { get; set; }
 
-    public string Name { get; set; } = null!;
+    public string? Name { get; set; }
 
     public string Slug { get; set; } = null!;
 
-    public int? ParentId { get; set; }
+    public int? BrandId { get; set; }
 
-    public string? Path { get; set; }
+    public int CategoryId { get; set; }
 
-    public int Level { get; set; }
+    public string Description { get; set; } = null!;
+
+    public decimal Rating { get; set; }
 
     public int Status { get; set; }
 

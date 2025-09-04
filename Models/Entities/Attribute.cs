@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CatalogServiceAPI_Electric_Store.Models.Entities;
 
-public partial class Category
+public partial class Attribute
 {
     public int Id { get; set; }
 
@@ -11,13 +11,9 @@ public partial class Category
 
     public string Slug { get; set; } = null!;
 
-    public int? ParentId { get; set; }
+    public string DataType { get; set; } = null!;
 
-    public string? Path { get; set; }
-
-    public int Level { get; set; }
+    public string Unit { get; set; } = null!;
 
     public int Status { get; set; }
-
-    public DateTime CreatedAt { get; set; }
 }

@@ -3,6 +3,7 @@ using CatalogServiceAPI_Electric_Store.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using Attribute = CatalogServiceAPI_Electric_Store.Models.Entities.Attribute;
 
 namespace CatalogServiceAPI_Electric_Store.Models;
 
@@ -17,15 +18,23 @@ public partial class CatalogAPIContext : DbContext
     {
     }
 
+    public virtual DbSet<Attribute> Attributes { get; set; }
+
     public virtual DbSet<Brand> Brands { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }
+
+    public virtual DbSet<CategoryAttribute> CategoryAttributes { get; set; }
+
+    public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+
+
 
     public override int SaveChanges()
     {
@@ -58,14 +67,36 @@ public partial class CatalogAPIContext : DbContext
                 }
             }
         }
+          
+
+
 
         return base.SaveChanges();
     }
-
-
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Attribute>(entity =>
+        {
+            entity.ToTable("attributes");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.DataType)
+                .HasMaxLength(50)
+                .HasColumnName("data_type");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(255)
+                .HasColumnName("slug");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+            entity.Property(e => e.Unit)
+                .HasMaxLength(50)
+                .HasColumnName("unit");
+        });
+
         modelBuilder.Entity<Brand>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__brands__3213E83FBBDEC841");
@@ -109,10 +140,51 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Slug)
                 .HasMaxLength(140)
                 .HasColumnName("slug");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+        });
 
-            entity.HasOne(d => d.Parent).WithMany(p => p.InverseParent)
-                .HasForeignKey(d => d.ParentId)
-                .HasConstraintName("FK_Categories_Parent");
+        modelBuilder.Entity<CategoryAttribute>(entity =>
+        {
+            entity.ToTable("category_attributes");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.IsFilterable).HasColumnName("is_filterable");
+            entity.Property(e => e.IsRequired).HasColumnName("is_required");
+            entity.Property(e => e.IsVariantLevel).HasColumnName("is_variant_level");
+        });
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("products");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BrandId).HasColumnName("brand_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Description)
+                .HasMaxLength(1000)
+                .IsFixedLength()
+                .HasColumnName("description");
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .HasColumnName("name");
+            entity.Property(e => e.Rating)
+                .HasColumnType("decimal(3, 2)")
+                .HasColumnName("rating");
+            entity.Property(e => e.Slug)
+                .HasMaxLength(100)
+                .IsFixedLength()
+                .HasColumnName("slug");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
         });
 
         modelBuilder.Entity<User>(entity =>
