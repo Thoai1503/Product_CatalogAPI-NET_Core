@@ -67,7 +67,23 @@ public partial class CatalogAPIContext : DbContext
                 }
             }
         }
-          
+
+        foreach (var entry in ChangeTracker.Entries<Attribute>())
+
+
+            {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+            }
+
+        }
+
+
+
 
 
 
