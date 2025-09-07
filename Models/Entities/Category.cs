@@ -20,4 +20,6 @@ public partial class Category
     public int Status { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<CategoryAttribute> CategoryAttributes { get; set; } = new List<CategoryAttribute>();
 }

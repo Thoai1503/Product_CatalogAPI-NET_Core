@@ -16,4 +16,8 @@ public partial class CategoryAttribute
     public bool IsVariantLevel { get; set; }
 
     public bool IsRequired { get; set; }
+
+    public virtual Attribute Attribute { get; set; } = null!;
+
+    public virtual Category Category { get; set; } = null!;
 }

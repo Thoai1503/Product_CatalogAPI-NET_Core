@@ -16,4 +16,6 @@ public partial class Attribute
     public string Unit { get; set; } = null!;
 
     public int Status { get; set; }
+
+    public virtual ICollection<CategoryAttribute> CategoryAttributes { get; set; } = new List<CategoryAttribute>();
 }
