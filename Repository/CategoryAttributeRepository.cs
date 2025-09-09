@@ -1,6 +1,7 @@
 ﻿using CatalogServiceAPI_Electric_Store.Models;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
+using Microsoft.EntityFrameworkCore;
 
 namespace CatalogServiceAPI_Electric_Store.Repository
 {
@@ -68,16 +69,28 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
             try
             {
-                var categoryAttributes = _context.CategoryAttributes
+                var categoryAttributes = _context.CategoryAttributes.Include
+                    (ca => ca.Attribute)
                     .Where(ca => ca.CategoryId == categoryId)
                     .Select(ca => new CategoryAttributeView
                     {
                         id = ca.Id,
                         category_id = ca.CategoryId,
                         attribute_id = ca.AttributeId,
+                    
                         is_filterable = ca.IsFilterable,
                         is_variant_level = ca.IsVariantLevel,
-                        is_required = ca.IsRequired
+                        is_required = ca.IsRequired,
+                        attribute = new AttributeView
+                        {
+                            id = ca.Attribute.Id,
+                            name = ca.Attribute.Name,
+                            slug = ca.Attribute.Slug,
+                            data_type = ca.Attribute.DataType,
+                            unit = ca.Attribute.Unit,
+                            status = ca.Attribute.Status,
+
+                        }
                     }).ToHashSet();
                 return categoryAttributes;
             }

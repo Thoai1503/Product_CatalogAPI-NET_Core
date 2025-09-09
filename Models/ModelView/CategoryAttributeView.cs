@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CatalogServiceAPI_Electric_Store.Models.ModelView;
+using System;
 using System.Collections.Generic;
 
 namespace CatalogServiceAPI_Electric_Store.Repository;
@@ -17,5 +18,6 @@ public  class CategoryAttributeView
 
     public bool is_required { get; set; } = false;
 
-   
+    public AttributeView attribute { get; set; } = new AttributeView();
+
 }
