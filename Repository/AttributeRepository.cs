@@ -97,18 +97,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
 
                 }).ToHashSet();
-                //var attributes = (from ca in _context.CategoryAttributes
-                //                  join a in _context.Attributes on ca.AttributeId equals a.Id
-                //                  where ca.CategoryId == categoryId
-                //                  select new AttributeView
-                //                  {
-                //                      id = a.Id,
-                //                      name = a.Name,
-                //                      slug = a.Slug,
-                //                      data_type = a.DataType,
-                //                      unit = a.Unit,
-                //                      status = a.Status
-                //                  }).ToHashSet();
+     
                 return attrs;
             }
             catch (Exception ex)

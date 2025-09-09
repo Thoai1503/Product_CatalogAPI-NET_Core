@@ -26,6 +26,8 @@ builder.Services.AddDbContext<CatalogAPIContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<CategoryRepository>(); //  ??ng ký CategoryRepository v?i DI container
 builder.Services.AddScoped<AttributeRepository>();
+builder.Services.AddScoped<CategoryAttributeRepository>();
+
 
 var app = builder.Build();
 
