@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CatalogServiceAPI_Electric_Store.Helper;
 using CatalogServiceAPI_Electric_Store.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using Attribute = CatalogServiceAPI_Electric_Store.Models.Entities.Attribute;
 
 namespace CatalogServiceAPI_Electric_Store.Models;
 
@@ -27,6 +29,61 @@ public partial class CatalogAPIContext : DbContext
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
+
+
+    public override int SaveChanges()
+    {
+        foreach (var entry in ChangeTracker.Entries<Category>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+
+                // set level + path
+                if (entry.Entity.ParentId == null)
+                {
+                    entry.Entity.Level = 0;
+                    entry.Entity.Path = "/" + entry.Entity.Slug;
+                }
+                else
+                {
+                    // dùng AsNoTracking để tránh bị track trùng
+                    var parent = Categories
+                        .AsNoTracking()
+                        .FirstOrDefault(c => c.Id == entry.Entity.ParentId);
+
+                    entry.Entity.Level = parent != null ? parent.Level + 1 : 0;
+                    entry.Entity.Path = parent != null
+                        ? parent.Path + "/" + entry.Entity.Slug
+                        : "/" + entry.Entity.Slug;
+                }
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<Attribute>())
+
+
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+            }
+
+        }
+
+
+
+
+
+
+        return base.SaveChanges();
+    }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
@@ -123,6 +180,7 @@ public partial class CatalogAPIContext : DbContext
             entity.HasOne(d => d.Category).WithMany(p => p.CategoryAttributes)
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
+                
                 .HasConstraintName("FK_category_attributes_categories");
         });
 

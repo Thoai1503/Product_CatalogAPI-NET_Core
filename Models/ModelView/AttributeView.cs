@@ -14,5 +14,6 @@
         public string unit { get; set; } = "";
 
         public int status { get; set; } = 1;
+        public int is_selected { get; set; } = 0;
     }
 }

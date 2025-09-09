@@ -1,4 +1,5 @@
-﻿using CatalogServiceAPI_Electric_Store.Repository;
+﻿using CatalogServiceAPI_Electric_Store.Models.ModelView;
+using CatalogServiceAPI_Electric_Store.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -18,7 +19,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpGet]
         public IActionResult Get()
         {
-          
+
             var attributes = _attributeRepository.GetAll();
             return Ok(attributes);
         }
@@ -32,8 +33,14 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // POST api/<AttributeController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post(AttributeView en)
         {
+            var result = _attributeRepository.Create(en);
+            if (!result)
+            {
+                return Ok(result);
+            }
+            return Ok(result);
         }
 
         // PUT api/<AttributeController>/5
@@ -46,6 +53,12 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+        }
+        [HttpGet("GetByCategoryId/{categoryId}")]
+        public IActionResult GetByCategoryId(int categoryId)
+        {
+            var attributes = _attributeRepository.GetByCategoryId(categoryId);
+            return Ok(attributes);
         }
     }
 }

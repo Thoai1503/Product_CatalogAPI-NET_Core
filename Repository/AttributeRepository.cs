@@ -14,7 +14,30 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public bool Create(AttributeView entity)
         {
-            throw new NotImplementedException();
+
+            
+            try
+            {
+                var attribute = new Models.Entities.Attribute
+                {
+                    Name = entity.name,
+                    Slug = entity.slug,
+                    DataType = entity.data_type,
+                    Unit = entity.unit,
+                    Status = entity.status,
+                  
+                };
+                _context.Attributes.Add(attribute);
+                _context.SaveChanges();
+
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool Delete(int id)
@@ -58,5 +81,40 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         {
             throw new NotImplementedException();
         }
-    }
+        public HashSet<AttributeView> GetByCategoryId(int categoryId)
+        {
+            try
+            {
+                var attrs = _context.Attributes.Select(a => new AttributeView
+                {
+                    id = a.Id,
+                    name = a.Name,
+                    slug = a.Slug,
+                    data_type = a.DataType,
+                    unit = a.Unit,
+                    status = a.Status,
+                    is_selected = _context.CategoryAttributes.Any(ca => ca.CategoryId == categoryId && ca.AttributeId == a.Id) ? 1 : 0
+
+
+                }).ToHashSet();
+                //var attributes = (from ca in _context.CategoryAttributes
+                //                  join a in _context.Attributes on ca.AttributeId equals a.Id
+                //                  where ca.CategoryId == categoryId
+                //                  select new AttributeView
+                //                  {
+                //                      id = a.Id,
+                //                      name = a.Name,
+                //                      slug = a.Slug,
+                //                      data_type = a.DataType,
+                //                      unit = a.Unit,
+                //                      status = a.Status
+                //                  }).ToHashSet();
+                return attrs;
+            }
+            catch (Exception ex)
+            {
+                return new HashSet<AttributeView>();
+            }
+        }
+        }
 }
