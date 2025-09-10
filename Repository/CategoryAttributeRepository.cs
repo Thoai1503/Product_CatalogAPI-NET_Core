@@ -28,7 +28,43 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public CategoryAttributeView FindById(int id)
         {
-            throw new NotImplementedException();
+            
+            try
+            {
+                var ca = _context.CategoryAttributes.Include
+                    (ca => ca.Attribute)
+                    .FirstOrDefault(ca => ca.Id == id);
+                if (ca == null)
+                {
+                    return null; // Entity not found
+                }
+                var categoryAttributeView = new CategoryAttributeView
+                {
+                    id = ca.Id,
+                    category_id = ca.CategoryId,
+                    attribute_id = ca.AttributeId,
+                   
+                    is_filterable = ca.IsFilterable,
+                    is_variant_level = ca.IsVariantLevel,
+                    is_required = ca.IsRequired,
+                    attribute = new AttributeView
+                    {
+                        id = ca.Attribute.Id,
+                        name = ca.Attribute.Name,
+                        slug = ca.Attribute.Slug,
+                        data_type = ca.Attribute.DataType,
+                        unit = ca.Attribute.Unit,
+                        status = ca.Attribute.Status,
+                    }
+                };
+                return categoryAttributeView;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return null; // Error occurred
+            }
+
         }
 
         public HashSet<CategoryAttributeView> FindByKeywork(string keywork)
@@ -41,15 +77,26 @@ namespace CatalogServiceAPI_Electric_Store.Repository
            
             try
             {
-                var categoryAttributes = _context.CategoryAttributes
+                var categoryAttributes = _context.CategoryAttributes.Include
+                    (ca => ca.Attribute)
                     .Select(ca => new CategoryAttributeView
                     {
                         id = ca.Id,
                         category_id = ca.CategoryId,
                         attribute_id = ca.AttributeId,
+                       
                         is_filterable = ca.IsFilterable,
                         is_variant_level = ca.IsVariantLevel,
-                        is_required = ca.IsRequired
+                        is_required = ca.IsRequired,
+                        attribute = new AttributeView
+                        {
+                            id = ca.Attribute.Id,
+                            name = ca.Attribute.Name,
+                            slug = ca.Attribute.Slug,
+                            data_type = ca.Attribute.DataType,
+                            unit = ca.Attribute.Unit,
+                            status = ca.Attribute.Status,
+                        }
                     }).ToHashSet();
                 return categoryAttributes;
             }
@@ -62,7 +109,30 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public bool Update(CategoryAttributeView entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var ca = _context.CategoryAttributes.FirstOrDefault(ca => ca.Id == entity.id);
+                if (ca == null)
+                {
+                    return false; // Entity not found
+                }
+                // Update fields
+                ca.CategoryId = entity.category_id;
+                ca.AttributeId = entity.attribute_id;
+                ca.IsFilterable = entity.is_filterable;
+                ca.IsVariantLevel = entity.is_variant_level;
+                ca.IsRequired = entity.is_required;
+                _context.CategoryAttributes.Update(ca);
+                _context.SaveChanges();
+                return true; // Update successful
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return false; // Error occurred
+            }
+
         }
         public HashSet<CategoryAttributeView> GetByCategoryId(int categoryId)
         {

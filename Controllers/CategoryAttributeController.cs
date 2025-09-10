@@ -41,8 +41,26 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // PUT api/<CategoryAttributeController>/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Put(int id, CategoryAttributeView en)
         {
+        var entity = _categoryAttributeRepository.FindById(id);
+            if (entity != null)
+            {
+                entity.category_id = entity.category_id;
+                entity.attribute_id = entity.attribute_id;
+                entity.is_filterable = en.is_filterable;
+                entity.is_variant_level = en.is_variant_level;
+                entity.is_required = en.is_required;
+                var result = _categoryAttributeRepository.Update(entity);
+                if (result)
+                {
+                    return Ok(entity);
+                }
+                return BadRequest();
+            }
+            return NotFound();
+
+
         }
 
         // DELETE api/<CategoryAttributeController>/5
