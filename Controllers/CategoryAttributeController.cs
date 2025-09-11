@@ -35,8 +35,11 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // POST api/<CategoryAttributeController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromBody] CategoryAttributeView en)
         {
+            var result = _categoryAttributeRepository.Create(en);
+            if (!result)  BadRequest(result);
+            return Ok(result);
         }
 
         // PUT api/<CategoryAttributeController>/5
@@ -65,8 +68,10 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // DELETE api/<CategoryAttributeController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+          var re=  _categoryAttributeRepository.Delete(id);
+            return Ok(re);
         }
         [HttpGet("category/{categoryId}")]
         public IActionResult GetByCategoryId(int categoryId)

@@ -1,4 +1,5 @@
 ﻿using CatalogServiceAPI_Electric_Store.Models;
+using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
 using Microsoft.EntityFrameworkCore;
@@ -18,12 +19,48 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         }
         public bool Create(CategoryAttributeView entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                var en = new CategoryAttribute
+                {
+                    AttributeId = entity.attribute_id,
+                    CategoryId = entity.category_id,
+                    IsFilterable = false,
+                    IsVariantLevel = false,
+                    IsRequired = false,
+                };
+                _context.Add(en);
+                _context.SaveChanges();
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
         }
 
         public bool Delete(int id)
         {
-            throw new NotImplementedException();
+
+            try
+            {
+                var en = _context.CategoryAttributes.FirstOrDefault(x => x.AttributeId == id);
+                if (en != null)
+                {
+                    _context.CategoryAttributes.Remove(en);
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+
         }
 
         public CategoryAttributeView FindById(int id)
