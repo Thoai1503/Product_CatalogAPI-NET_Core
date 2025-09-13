@@ -79,5 +79,23 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
             var categoryAttributes = _categoryAttributeRepository.GetByCategoryId(categoryId);
             return Ok(categoryAttributes);
         }
+        [HttpPost("category/{categoryId}")]
+        public IActionResult CreateMultipleAttr(int categoryId, int[] ints)
+        {
+            Console.WriteLine("Array of int: " + ints);
+            for (int i = 0; i < ints.Length; i++)
+            {
+                Console.WriteLine(ints[i]);
+                var re = _categoryAttributeRepository.Create(new CategoryAttributeView { attribute_id = ints[i], category_id = categoryId });
+                if (!re)
+                {
+                    // Return a valid anonymous object using C# syntax
+                    return Ok(new { success = false, id = ints[i] });
+                }
+            }
+            return Ok(true);
+        }
+             
+          
     }
 }

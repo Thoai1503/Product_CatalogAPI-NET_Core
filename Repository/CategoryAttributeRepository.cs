@@ -47,10 +47,11 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
             try
             {
-                var en = _context.CategoryAttributes.FirstOrDefault(x => x.AttributeId == id);
+                var en = _context.CategoryAttributes.FirstOrDefault(x => x.Id == id);
                 if (en != null)
                 {
                     _context.CategoryAttributes.Remove(en);
+                    _context.SaveChanges();
                     return true;
                 }
                 return false;
