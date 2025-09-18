@@ -28,6 +28,7 @@ builder.Services.AddScoped<CategoryRepository>(); //  ??ng ký CategoryRepository
 builder.Services.AddScoped<AttributeRepository>();
 builder.Services.AddScoped<CategoryAttributeRepository>();
 builder.Services.AddScoped<BrandRepository>();
+builder.Services.AddScoped<ProductRepository>();
 
 
 var app = builder.Build();
