@@ -27,6 +27,7 @@ builder.Services.AddDbContext<CatalogAPIContext>(options =>
 builder.Services.AddScoped<CategoryRepository>(); //  ??ng ký CategoryRepository v?i DI container
 builder.Services.AddScoped<AttributeRepository>();
 builder.Services.AddScoped<CategoryAttributeRepository>();
+builder.Services.AddScoped<BrandRepository>();
 
 
 var app = builder.Build();
