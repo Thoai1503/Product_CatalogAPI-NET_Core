@@ -19,16 +19,18 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         }
         // GET: api/<ProductController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            var products = _repo.GetAll();
+            return Ok(products);
         }
 
         // GET api/<ProductController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            var en = _repo.FindById(id);
+            return Ok(en);
         }
 
         // POST api/<ProductController>

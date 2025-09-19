@@ -14,4 +14,12 @@ public partial class ProductVariant
     public int Price { get; set; }
 
     public int Status { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public virtual Product Product { get; set; } = null!;
+
+    public virtual ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
+
+    public virtual ICollection<VariantAttribute> VariantAttributes { get; set; } = new List<VariantAttribute>();
 }

@@ -2,9 +2,9 @@
 {
     public class BrandView
     {
-        public string name { get; set; } = null!;
+        public string name { get; set; } = "";
 
-        public string slug { get; set; } = null!;
+        public string slug { get; set; } = "";
 
         public int status { get; set; } = 1;
 

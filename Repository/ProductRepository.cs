@@ -3,6 +3,8 @@ using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CatalogServiceAPI_Electric_Store.Repository
 
@@ -29,6 +31,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                     BrandId = entity.brand_id,
                     Rating = entity.rating,
                     Status = entity.status,
+                    CreatedAt = DateTime.Now,
 
 
                 };
@@ -51,7 +54,51 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public ProductView FindById(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var en = _context.Products.Include(c => c.Category).Include(c => c.Brand).FirstOrDefault(c=>c.Id==id);
+
+                var json = JsonSerializer.Serialize(en, new JsonSerializerOptions
+                {
+                    WriteIndented = true, // format đẹp dễ đọc
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles // tránh vòng lặp giữa navigation properties
+                });
+
+                Console.WriteLine(json);
+                return new ProductView
+                {
+                    id = en.Id,
+                    name = en.Name,
+                    description = en.Description,
+                    category_id = en.CategoryId,
+                    brand_id = (int)en.BrandId,
+                    rating = en.Rating,
+                    status = en.Status,
+                    brand = new BrandView
+                    {
+                        id = en.Brand.Id,
+                        name = en.Brand.Name,
+                        slug = en.Brand.Slug
+
+                    },
+                    category = new CategoryView
+                    {
+                        id = en.Category.Id,
+                        name = en.Category.Name,
+                        slug = en.Category.Slug,
+                        parent_id = (int)en.Category.ParentId,
+                        path = en.Category.Path,
+                        level = en.Category.Level
+
+                    }
+                };
+                
+            }
+            catch (Exception ex)
+            {
+                throw new Exception();
+            }
+
         }
 
         public HashSet<ProductView> FindByKeywork(string keywork)
@@ -63,7 +110,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         {
 
 
-            return _context.Products
+            return _context.Products.Include(c=>c.Brand).Include(c=>c.Category)
              
                .Select(en => new ProductView
                {
@@ -74,6 +121,23 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                    brand_id =(int) en.BrandId,
                    rating = en.Rating,
                    status = en.Status,
+                   brand = new BrandView
+                   {
+                       id = en.Brand.Id,
+                       name = en.Brand.Name,
+                       slug =en.Brand.Slug
+
+                   },
+                   category =new CategoryView
+                   {
+                       id = en.Category.Id,
+                       name = en.Category.Name,
+                       slug = en.Category.Slug,
+                       parent_id =(int) en.Category.ParentId,
+                       path =en.Category.Path,
+                       level= en.Category.Level
+                      
+                   }
                  
                })
                .ToHashSet();

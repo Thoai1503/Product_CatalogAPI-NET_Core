@@ -1,7 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CatalogServiceAPI_Electric_Store.Helper;
 using CatalogServiceAPI_Electric_Store.Models.Entities;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using Attribute = CatalogServiceAPI_Electric_Store.Models.Entities.Attribute;
 
 namespace CatalogServiceAPI_Electric_Store.Models;
 
@@ -26,10 +28,84 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<ProductAttribute> ProductAttributes { get; set; }
+
+    public virtual DbSet<ProductImage> ProductImages { get; set; }
+
     public virtual DbSet<ProductVariant> ProductVariants { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
+
+
+
+    public override int SaveChanges()
+    {
+        foreach (var entry in ChangeTracker.Entries<Category>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+
+                // set level + path
+                if (entry.Entity.ParentId == null)
+                {
+                    entry.Entity.Level = 0;
+                    entry.Entity.Path = "/" + entry.Entity.Slug;
+                }
+                else
+                {
+                    // dùng AsNoTracking để tránh bị track trùng
+                    var parent = Categories
+                        .AsNoTracking()
+                        .FirstOrDefault(c => c.Id == entry.Entity.ParentId);
+
+                    entry.Entity.Level = parent != null ? parent.Level + 1 : 0;
+                    entry.Entity.Path = parent != null
+                        ? parent.Path + "/" + entry.Entity.Slug
+                        : "/" + entry.Entity.Slug;
+                }
+            }
+        }
+
+        foreach (var entry in ChangeTracker.Entries<Attribute>())
+
+
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+            }
+
+        }
+        foreach (var entry in ChangeTracker.Entries<Brand>())
+
+
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+            }
+
+        }
+
+
+
+
+
+
+        return base.SaveChanges();
+    }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
@@ -156,6 +232,63 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Status)
                 .HasDefaultValue(1)
                 .HasColumnName("status");
+
+            entity.HasOne(d => d.Brand).WithMany(p => p.Products)
+                .HasForeignKey(d => d.BrandId)
+                .HasConstraintName("FK_products_brands");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.Products)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_products_categories");
+        });
+
+        modelBuilder.Entity<ProductAttribute>(entity =>
+        {
+            entity.ToTable("product_attribute");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.ValueDecimal)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("value_decimal");
+            entity.Property(e => e.ValueInt).HasColumnName("value_int");
+            entity.Property(e => e.ValueText)
+                .HasMaxLength(50)
+                .HasColumnName("value_text");
+
+            entity.HasOne(d => d.Attribute).WithMany(p => p.ProductAttributes)
+                .HasForeignKey(d => d.AttributeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_product_attribute_attributes");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.ProductAttributes)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_product_attribute_products");
+        });
+
+        modelBuilder.Entity<ProductImage>(entity =>
+        {
+            entity.ToTable("product_image");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.Url)
+                .HasMaxLength(250)
+                .IsUnicode(false)
+                .HasColumnName("url");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
+
+            entity.HasOne(d => d.Variant).WithMany(p => p.ProductImages)
+                .HasForeignKey(d => d.VariantId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_product_image_product_variants");
         });
 
         modelBuilder.Entity<ProductVariant>(entity =>
@@ -165,6 +298,10 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.Sku)
@@ -174,6 +311,11 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Status)
                 .HasDefaultValue(1)
                 .HasColumnName("status");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.ProductVariants)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_product_variants_products");
         });
 
         modelBuilder.Entity<User>(entity =>
@@ -204,6 +346,31 @@ public partial class CatalogAPIContext : DbContext
                 .HasColumnName("phone");
             entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.Status).HasColumnName("status");
+        });
+
+        modelBuilder.Entity<VariantAttribute>(entity =>
+        {
+            entity.ToTable("variant_attribute");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.ValueInt).HasColumnName("value_int");
+            entity.Property(e => e.ValueText)
+                .HasMaxLength(50)
+                .HasColumnName("value_text");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
+
+            entity.HasOne(d => d.Attribute).WithMany(p => p.VariantAttributes)
+                .HasForeignKey(d => d.AttributeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_variant_attribute_attributes");
+
+            entity.HasOne(d => d.Variant).WithMany(p => p.VariantAttributes)
+                .HasForeignKey(d => d.VariantId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_variant_attribute_product_variants");
         });
 
         OnModelCreatingPartial(modelBuilder);

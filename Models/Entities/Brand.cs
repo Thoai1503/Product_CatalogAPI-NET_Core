@@ -12,4 +12,6 @@ public partial class Brand
     public int Status { get; set; }
 
     public int Id { get; set; }
+
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

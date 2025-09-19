@@ -4,7 +4,7 @@
     {
         public int id { get; set; }
         public string name { get; set; }
-        public string description { get; set; }
+        public string description { get; set; } = "";
         public int category_id { get; set; }
         public int brand_id { get; set; } = 0;
 
@@ -16,7 +16,7 @@
 
         public CategoryView category { get; set; } = new CategoryView();
         public BrandView brand { get; set; } = new BrandView();
-        public DateTime created_at { get; set; }
+        public DateTime created_at { get; set; } = DateTime.Now;
 
     }
 }
