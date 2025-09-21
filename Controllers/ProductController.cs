@@ -39,8 +39,8 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = _repo.Create(product);
-            if (!result) return StatusCode(500, new { message = "Failed to create product" });
+            var result = _repo.CreateAndReturn(product);
+            if (result== null) return StatusCode(500, new { message = "Failed to create product" });
 
             return Ok(product);
         }

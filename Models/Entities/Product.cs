@@ -30,8 +30,4 @@ public partial class Product
     public virtual ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
 
     public virtual ICollection<ProductVariant> ProductVariants { get; set; } = new List<ProductVariant>();
-    public override string ToString()
-    {
-        return $"Id: {Id}, Name: {Name}, Category: {Category?.Name}, Brand: {Brand?.Name}";
-    }
 }

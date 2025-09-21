@@ -38,6 +38,10 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+
 
 
     public override int SaveChanges()
@@ -85,6 +89,19 @@ public partial class CatalogAPIContext : DbContext
             }
 
         }
+        foreach (var entry in ChangeTracker.Entries<Product>())
+
+
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                // set slug từ name
+                entry.Entity.Slug = SlugHelper.Slugify(
+                    StringHelper.RemoveVietnameseDiacritics(entry.Entity.Name)
+                );
+            }
+
+        }
         foreach (var entry in ChangeTracker.Entries<Brand>())
 
 
@@ -98,17 +115,40 @@ public partial class CatalogAPIContext : DbContext
             }
 
         }
-
-
-
-
-
-
+        HandleProductInsert();
         return base.SaveChanges();
     }
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+
+    private void HandleProductInsert()
+    {
+        var newProducts = ChangeTracker.Entries<Product>()
+            .Where(e => e.State == EntityState.Added)
+            .Select(e => e.Entity)
+            .ToList();
+
+        foreach (var product in newProducts)
+        {
+            // lấy attributes theo category (is_variant_level = false)
+            var attributes = CategoryAttributes
+                .Where(ca => ca.CategoryId == product.CategoryId && ca.IsVariantLevel == false)
+                .Select(ca => ca.Attribute)
+                .ToList();
+
+            foreach (var attr in attributes)
+            {
+                var productAttr = new ProductAttribute
+                {
+                    AttributeId = attr.Id,
+                    Product = product,   // 👈 gán navigation property thay vì ProductId
+                    ValueText = null,
+                    ValueDecimal = null,
+                    ValueInt = null
+                };
+
+                ProductAttributes.Add(productAttr);
+            }
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -247,9 +287,7 @@ public partial class CatalogAPIContext : DbContext
         {
             entity.ToTable("product_attribute");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.ValueDecimal)
