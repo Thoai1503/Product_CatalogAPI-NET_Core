@@ -3,6 +3,8 @@ using CatalogServiceAPI_Electric_Store.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Attribute = CatalogServiceAPI_Electric_Store.Models.Entities.Attribute;
 
 namespace CatalogServiceAPI_Electric_Store.Models;
@@ -115,9 +117,96 @@ public partial class CatalogAPIContext : DbContext
             }
 
         }
+        HandleCategoryAttributeChanges();
         HandleProductInsert();
         return base.SaveChanges();
     }
+    private void HandleCategoryAttributeChanges()
+    {
+        // --------- Insert logic ---------
+        var newCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
+            .Where(e => e.State == EntityState.Added)
+            .ToList();
+
+        foreach (var entry in newCategoryAttributes)
+        {
+            var attributeId = entry.Entity.AttributeId;
+            var categoryId = entry.Entity.CategoryId;
+
+            Console.WriteLine($"[DEBUG] Insert AttributeId: {attributeId}, CategoryId: {categoryId}");
+
+            var productIds = Products
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => p.Id)
+                .ToList();
+
+            var existingPairs = ProductAttributes
+                .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
+                .Select(pa => pa.ProductId)
+                .ToHashSet();
+
+            var newProductAttributes = new List<ProductAttribute>();
+            foreach (var productId in productIds)
+            {
+                if (!existingPairs.Contains(productId))
+                {
+                    newProductAttributes.Add(new ProductAttribute
+                    {
+                        AttributeId = attributeId,
+                        ProductId = productId,
+                    });
+                }
+            }
+
+            if (newProductAttributes.Any())
+            {
+                ProductAttributes.AddRange(newProductAttributes);
+
+                var result = JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Inserted ProductAttributes: " + result);
+            }
+        }
+
+        // --------- Delete logic ---------
+        var deletedCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
+            .Where(e => e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var entry in deletedCategoryAttributes)
+        {
+            var attributeId = entry.Entity.AttributeId;
+            var categoryId = entry.Entity.CategoryId;
+
+            Console.WriteLine($"[DEBUG] Delete AttributeId: {attributeId}, CategoryId: {categoryId}");
+
+            var productIds = Products
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => p.Id)
+                .ToList();
+
+            var productAttributesToRemove = ProductAttributes
+                .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
+                .ToList();
+
+            if (productAttributesToRemove.Any())
+            {
+                ProductAttributes.RemoveRange(productAttributesToRemove);
+
+                var result = JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Deleted ProductAttributes: " + result);
+            }
+        }
+    }
+
+
 
     private void HandleProductInsert()
     {
@@ -148,7 +237,37 @@ public partial class CatalogAPIContext : DbContext
                 ProductAttributes.Add(productAttr);
             }
         }
+
+
+
+        var deletedProducts = ChangeTracker.Entries<Product>()
+      .Where(e => e.State == EntityState.Deleted)
+      .ToList();
+
+        foreach (var entry in deletedProducts)
+        {
+            var productId = entry.Entity.Id;
+            Console.WriteLine($"[DEBUG] Delete ProductId: {productId}");
+
+            var productAttributesToRemove = ProductAttributes
+                .Where(pa => pa.ProductId == productId)
+                .ToList();
+
+            if (productAttributesToRemove.Any())
+            {
+                ProductAttributes.RemoveRange(productAttributesToRemove);
+
+                var result = JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Deleted ProductAttributes: " + result);
+            }
+        }
     }
+
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

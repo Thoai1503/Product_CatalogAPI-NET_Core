@@ -182,7 +182,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                .ToHashSet();
         }
 
-        public Product CreateAndReturn(ProductView product)
+        public ProductView CreateAndReturn(ProductView product)
         {
             try
             {
@@ -204,9 +204,18 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                     WriteIndented = true, // format đẹp dễ đọc
                     ReferenceHandler = ReferenceHandler.IgnoreCycles // tránh vòng lặp giữa navigation properties
                 });
+                var entity = new ProductView
+                {
+                    id= product.id,
+                    name= product.name,
+                    slug= product.slug,
+                    brand_id= product.brand_id,
+                    category_id= product.category_id,
+
+                };
 
                 Console.WriteLine("Sản phẩm mới:"+json);
-                return en;
+                return entity;
 
             }
             catch (Exception ex)

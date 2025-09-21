@@ -42,7 +42,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
             var result = _repo.CreateAndReturn(product);
             if (result== null) return StatusCode(500, new { message = "Failed to create product" });
 
-            return Ok(product);
+            return Ok(result);
         }
 
         // PUT api/<ProductController>/5
