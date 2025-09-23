@@ -8,9 +8,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()      // Cho phép m?i domain
-              .AllowAnyMethod()      // Cho phép m?i HTTP Method (GET, POST, PUT, DELETE...)
-              .AllowAnyHeader();     // Cho phép m?i header
+        policy.AllowAnyOrigin()      
+              .AllowAnyMethod()     
+              .AllowAnyHeader();     
     });
 });
 
@@ -24,14 +24,19 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CatalogAPIContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddScoped<CategoryRepository>(); //  ??ng ký CategoryRepository v?i DI container
+builder.Services.AddScoped<CategoryRepository>(); 
 builder.Services.AddScoped<AttributeRepository>();
 builder.Services.AddScoped<CategoryAttributeRepository>();
 builder.Services.AddScoped<BrandRepository>();
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<ProductAttributeRepository>();
+builder.Services.AddScoped<ProductVariantRepository>();
+builder.Services.AddScoped<VariantAttributeRepository>();
 
 
 var app = builder.Build();
+
+//app.UseMiddleware<ApiKeyMiddleware>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

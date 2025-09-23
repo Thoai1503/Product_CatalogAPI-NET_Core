@@ -40,11 +40,6 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
-
-
 
     public override int SaveChanges()
     {
@@ -118,10 +113,106 @@ public partial class CatalogAPIContext : DbContext
 
         }
         HandleCategoryAttributeChanges();
-        HandleProductInsert();
+        HandleProductChanges();
+        HandleProductVariantChanges();
         return base.SaveChanges();
     }
-    private void HandleCategoryAttributeChanges()
+    private void HandleProductVariantChanges()
+    {
+        // --------- INSERT ProductVariant ---------
+        var newVariants = ChangeTracker.Entries<ProductVariant>()
+            .Where(e => e.State == EntityState.Added)
+            .Select(e => e.Entity)
+            .ToList();
+
+        foreach (var variant in newVariants)
+        {
+            Console.WriteLine($"[DEBUG] Insert ProductVariant Id: {variant.Id}, ProductId: {variant.ProductId}");
+
+            // Lấy các attribute có IsVariantLevel = true từ category của product
+            var productId = variant.ProductId;
+
+            var categoryId = Products
+                .Where(p => p.Id == productId)
+                .Select(p => p.CategoryId)
+                .FirstOrDefault();
+
+            var attributeIds = CategoryAttributes
+                .Where(ca => ca.CategoryId == categoryId && ca.IsVariantLevel)
+                .Select(ca => ca.AttributeId)
+                .ToList();
+
+            if (!attributeIds.Any())
+            {
+                Console.WriteLine("[DEBUG] Không có CategoryAttributes nào có IsVariantLevel = true");
+                continue;
+            }
+
+            // Tránh tạo trùng nếu đã có
+            var existingAttrIds = VariantAttributes
+                .Where(va => va.VariantId == variant.Id && attributeIds.Contains(va.AttributeId))
+                .Select(va => va.AttributeId)
+                .ToHashSet();
+
+            var newVariantAttrs = new List<VariantAttribute>();
+            foreach (var attrId in attributeIds)
+            {
+                if (!existingAttrIds.Contains(attrId))
+                {
+                    newVariantAttrs.Add(new VariantAttribute
+                    {
+                        Variant = variant,    // gắn navigation để EF tự bind
+                        AttributeId = attrId,
+                        ValueText = null,
+                        ValueDecimal = null,
+                        ValueInt = null
+                    });
+                }
+            }
+
+            if (newVariantAttrs.Any())
+            {
+                VariantAttributes.AddRange(newVariantAttrs);
+
+                var result = JsonSerializer.Serialize(newVariantAttrs, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Created VariantAttributes: " + result);
+            }
+        }
+
+        // --------- DELETE ProductVariant ---------
+        var deletedVariants = ChangeTracker.Entries<ProductVariant>()
+            .Where(e => e.State == EntityState.Deleted)
+            .Select(e => e.Entity)
+            .ToList();
+
+        foreach (var variant in deletedVariants)
+        {
+            Console.WriteLine($"[DEBUG] Delete ProductVariant Id: {variant.Id}");
+
+            var attrsToRemove = VariantAttributes
+                .Where(va => va.VariantId == variant.Id)
+                .ToList();
+
+            if (attrsToRemove.Any())
+            {
+                VariantAttributes.RemoveRange(attrsToRemove);
+
+                var result = JsonSerializer.Serialize(attrsToRemove, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Deleted VariantAttributes: " + result);
+            }
+        }
+    }
+
+
+    private void HandleCategoryAttributeChangesOld()
     {
         // --------- Insert logic ---------
         var newCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
@@ -207,42 +298,284 @@ public partial class CatalogAPIContext : DbContext
     }
 
 
-
-    private void HandleProductInsert()
+    private void HandleCategoryAttributeChanges()
     {
-        var newProducts = ChangeTracker.Entries<Product>()
+        // --------- Insert logic ---------
+        var newCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
             .Where(e => e.State == EntityState.Added)
-            .Select(e => e.Entity)
             .ToList();
 
-        foreach (var product in newProducts)
+        foreach (var entry in newCategoryAttributes)
         {
-            // lấy attributes theo category (is_variant_level = false)
-            var attributes = CategoryAttributes
-                .Where(ca => ca.CategoryId == product.CategoryId && ca.IsVariantLevel == false)
-                .Select(ca => ca.Attribute)
+            var attributeId = entry.Entity.AttributeId;
+            var categoryId = entry.Entity.CategoryId;
+            var isVariantLevel = entry.Entity.IsVariantLevel;
+
+            Console.WriteLine($"[DEBUG] Insert CategoryAttribute: AttributeId={attributeId}, CategoryId={categoryId}, IsVariantLevel={isVariantLevel}");
+
+            var productIds = Products
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => p.Id)
                 .ToList();
 
-            foreach (var attr in attributes)
+            if (!isVariantLevel)
             {
-                var productAttr = new ProductAttribute
-                {
-                    AttributeId = attr.Id,
-                    Product = product,   // 👈 gán navigation property thay vì ProductId
-                    ValueText = null,
-                    ValueDecimal = null,
-                    ValueInt = null
-                };
+                // Thêm ProductAttributes
+                var existingPairs = ProductAttributes
+                    .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
+                    .Select(pa => pa.ProductId)
+                    .ToHashSet();
 
-                ProductAttributes.Add(productAttr);
+                var newProductAttributes = productIds
+                    .Where(pid => !existingPairs.Contains(pid))
+                    .Select(pid => new ProductAttribute
+                    {
+                        AttributeId = attributeId,
+                        ProductId = pid,
+                    })
+                    .ToList();
+
+                if (newProductAttributes.Any())
+                {
+                    ProductAttributes.AddRange(newProductAttributes);
+                    Console.WriteLine("[DEBUG] Inserted ProductAttributes: " +
+                        JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+            else
+            {
+                // Thêm VariantAttributes
+                var variantIds = ProductVariants
+                    .Where(v => productIds.Contains(v.ProductId))
+                    .Select(v => v.Id)
+                    .ToList();
+
+                var existingPairs = VariantAttributes
+                    .Where(va => va.AttributeId == attributeId && variantIds.Contains(va.VariantId))
+                    .Select(va => va.VariantId)
+                    .ToHashSet();
+
+                var newVariantAttributes = variantIds
+                    .Where(vid => !existingPairs.Contains(vid))
+                    .Select(vid => new VariantAttribute
+                    {
+                        AttributeId = attributeId,
+                        VariantId = vid,
+                    })
+                    .ToList();
+
+                if (newVariantAttributes.Any())
+                {
+                    VariantAttributes.AddRange(newVariantAttributes);
+                    Console.WriteLine("[DEBUG] Inserted VariantAttributes: " +
+                        JsonSerializer.Serialize(newVariantAttributes, new JsonSerializerOptions { WriteIndented = true }));
+                }
             }
         }
 
+        // --------- Update logic ---------
+        var updatedCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
+            .Where(e => e.State == EntityState.Modified &&
+                        e.Property(p => p.IsVariantLevel).IsModified)
+            .ToList();
+
+        foreach (var entry in updatedCategoryAttributes)
+        {
+            var attributeId = entry.Entity.AttributeId;
+            var categoryId = entry.Entity.CategoryId;
+
+            var oldIsVariantLevel = (bool)entry.OriginalValues["IsVariantLevel"];
+            var newIsVariantLevel = entry.Entity.IsVariantLevel;
+
+            Console.WriteLine($"[DEBUG] Update CategoryAttribute: AttributeId={attributeId}, CategoryId={categoryId}, OldIsVariantLevel={oldIsVariantLevel}, NewIsVariantLevel={newIsVariantLevel}");
+
+            if (oldIsVariantLevel == newIsVariantLevel) continue; // Không đổi thì bỏ qua
+
+            var productIds = Products
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => p.Id)
+                .ToList();
+
+            if (oldIsVariantLevel && !newIsVariantLevel)
+            {
+                // Đổi từ Variant → Product
+                var variantIds = ProductVariants
+                    .Where(v => productIds.Contains(v.ProductId))
+                    .Select(v => v.Id)
+                    .ToList();
+
+                var variantAttributesToRemove = VariantAttributes
+                    .Where(va => va.AttributeId == attributeId && variantIds.Contains(va.VariantId))
+                    .ToList();
+
+                if (variantAttributesToRemove.Any())
+                {
+                    VariantAttributes.RemoveRange(variantAttributesToRemove);
+                    Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
+                        JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                }
+
+                var newProductAttributes = productIds
+                    .Select(pid => new ProductAttribute
+                    {
+                        AttributeId = attributeId,
+                        ProductId = pid,
+                    })
+                    .ToList();
+
+                ProductAttributes.AddRange(newProductAttributes);
+                Console.WriteLine("[DEBUG] Inserted ProductAttributes: " +
+                    JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            else if (!oldIsVariantLevel && newIsVariantLevel)
+            {
+                // Đổi từ Product → Variant
+                var productAttributesToRemove = ProductAttributes
+                    .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
+                    .ToList();
+
+                if (productAttributesToRemove.Any())
+                {
+                    ProductAttributes.RemoveRange(productAttributesToRemove);
+                    Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
+                        JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                }
+
+                var variantIds = ProductVariants
+                    .Where(v => productIds.Contains(v.ProductId))
+                    .Select(v => v.Id)
+                    .ToList();
+
+                var newVariantAttributes = variantIds
+                    .Select(vid => new VariantAttribute
+                    {
+                        AttributeId = attributeId,
+                        VariantId = vid,
+                    })
+                    .ToList();
+
+                VariantAttributes.AddRange(newVariantAttributes);
+                Console.WriteLine("[DEBUG] Inserted VariantAttributes: " +
+                    JsonSerializer.Serialize(newVariantAttributes, new JsonSerializerOptions { WriteIndented = true }));
+            }
+        }
+
+        // --------- Delete logic ---------
+        var deletedCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
+            .Where(e => e.State == EntityState.Deleted)
+            .ToList();
+
+        foreach (var entry in deletedCategoryAttributes)
+        {
+            var attributeId = entry.Entity.AttributeId;
+            var categoryId = entry.Entity.CategoryId;
+            var isVariantLevel = entry.Entity.IsVariantLevel;
+
+            Console.WriteLine($"[DEBUG] Delete CategoryAttribute: AttributeId={attributeId}, CategoryId={categoryId}, IsVariantLevel={isVariantLevel}");
+
+            var productIds = Products
+                .Where(p => p.CategoryId == categoryId)
+                .Select(p => p.Id)
+                .ToList();
+
+            if (!isVariantLevel)
+            {
+                var productAttributesToRemove = ProductAttributes
+                    .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
+                    .ToList();
+
+                if (productAttributesToRemove.Any())
+                {
+                    ProductAttributes.RemoveRange(productAttributesToRemove);
+                    Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
+                        JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+            else
+            {
+                var variantIds = ProductVariants
+                    .Where(v => productIds.Contains(v.ProductId))
+                    .Select(v => v.Id)
+                    .ToList();
+
+                var variantAttributesToRemove = VariantAttributes
+                    .Where(va => va.AttributeId == attributeId && variantIds.Contains(va.VariantId))
+                    .ToList();
+
+                if (variantAttributesToRemove.Any())
+                {
+                    VariantAttributes.RemoveRange(variantAttributesToRemove);
+                    Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
+                        JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                }
+            }
+        }
+    }
 
 
+
+
+    private void HandleProductChanges()
+    {
+        // --------- INSERT Product ---------
+        var newProducts = ChangeTracker.Entries<Product>()
+            .Where(e => e.State == EntityState.Added)
+            .ToList();
+
+        foreach (var entry in newProducts)
+        {
+            var productId = entry.Entity.Id;
+            var categoryId = entry.Entity.CategoryId;
+
+            Console.WriteLine($"[DEBUG] Insert ProductId: {productId}, CategoryId: {categoryId}");
+
+            // Lấy các attribute của category có is_variant_level = false
+            var categoryAttributes = CategoryAttributes
+                .Where(ca => ca.CategoryId == categoryId && ca.IsVariantLevel == false)
+                .Select(ca => ca.AttributeId)
+                .ToList();
+
+            if (!categoryAttributes.Any())
+            {
+                Console.WriteLine("[DEBUG] Không có CategoryAttributes để tạo ProductAttribute");
+                continue;
+            }
+
+            var existingPairs = ProductAttributes
+                .Where(pa => pa.ProductId == productId && categoryAttributes.Contains(pa.AttributeId))
+                .Select(pa => pa.AttributeId)
+                .ToHashSet();
+
+            var newProductAttributes = new List<ProductAttribute>();
+            foreach (var attrId in categoryAttributes)
+            {
+                if (!existingPairs.Contains(attrId))
+                {
+                    newProductAttributes.Add(new ProductAttribute
+                    {
+                        ProductId = productId,
+                        AttributeId = attrId
+                    });
+                }
+            }
+
+            if (newProductAttributes.Any())
+            {
+                ProductAttributes.AddRange(newProductAttributes);
+
+                var result = JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    ReferenceHandler = ReferenceHandler.IgnoreCycles
+                });
+                Console.WriteLine("[DEBUG] Created ProductAttributes: " + result);
+            }
+        }
+
+        // --------- DELETE Product ---------
         var deletedProducts = ChangeTracker.Entries<Product>()
-      .Where(e => e.State == EntityState.Deleted)
-      .ToList();
+            .Where(e => e.State == EntityState.Deleted)
+            .ToList();
 
         foreach (var entry in deletedProducts)
         {
@@ -266,8 +599,9 @@ public partial class CatalogAPIContext : DbContext
             }
         }
     }
-
-
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -424,7 +758,6 @@ public partial class CatalogAPIContext : DbContext
 
             entity.HasOne(d => d.Product).WithMany(p => p.ProductAttributes)
                 .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_product_attribute_products");
         });
 
@@ -452,9 +785,7 @@ public partial class CatalogAPIContext : DbContext
         {
             entity.ToTable("product_variants");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -509,10 +840,11 @@ public partial class CatalogAPIContext : DbContext
         {
             entity.ToTable("variant_attribute");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.ValueDecimal)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("value_decimal");
             entity.Property(e => e.ValueInt).HasColumnName("value_int");
             entity.Property(e => e.ValueText)
                 .HasMaxLength(50)

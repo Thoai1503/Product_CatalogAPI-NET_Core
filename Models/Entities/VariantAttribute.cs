@@ -13,6 +13,8 @@ public partial class VariantAttribute
 
     public int? ValueInt { get; set; }
 
+    public decimal? ValueDecimal { get; set; }
+
     public string? ValueText { get; set; }
 
     public virtual Attribute Attribute { get; set; } = null!;
