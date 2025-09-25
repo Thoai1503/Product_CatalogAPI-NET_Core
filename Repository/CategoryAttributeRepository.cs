@@ -162,6 +162,8 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 ca.IsVariantLevel = entity.is_variant_level;
                 ca.IsRequired = entity.is_required;
                 _context.CategoryAttributes.Update(ca);
+           
+
                 _context.SaveChanges();
                 return true; // Update successful
             }

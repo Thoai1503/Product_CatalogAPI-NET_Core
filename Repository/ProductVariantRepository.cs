@@ -21,7 +21,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             try {
                 var en = new ProductVariant
                 {
-                    Id = entity.id,
+                   
                     ProductId = entity.product_id,
                     Sku = entity.sku,
                     Price = entity.price,

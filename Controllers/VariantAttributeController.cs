@@ -1,4 +1,6 @@
-﻿using CatalogServiceAPI_Electric_Store.Repository;
+﻿using CatalogServiceAPI_Electric_Store.Models.Entities;
+using CatalogServiceAPI_Electric_Store.Models.ModelView;
+using CatalogServiceAPI_Electric_Store.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -53,6 +55,12 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+        }
+        [HttpPost("updatelist")]
+        public IActionResult UpdateFromList(List<VariantAttributeView> list)
+        {
+            var result = _repository.UpdateFromList(list);
+            return Ok(result);
         }
     }
 }

@@ -411,8 +411,8 @@ public partial class CatalogAPIContext : DbContext
                 if (variantAttributesToRemove.Any())
                 {
                     VariantAttributes.RemoveRange(variantAttributesToRemove);
-                    Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
-                        JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                    //Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
+                    //    JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
                 }
 
                 var newProductAttributes = productIds
@@ -424,8 +424,8 @@ public partial class CatalogAPIContext : DbContext
                     .ToList();
 
                 ProductAttributes.AddRange(newProductAttributes);
-                Console.WriteLine("[DEBUG] Inserted ProductAttributes: " +
-                    JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions { WriteIndented = true }));
+                //Console.WriteLine("[DEBUG] Inserted ProductAttributes: " +
+                //    JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions { WriteIndented = true }));
             }
             else if (!oldIsVariantLevel && newIsVariantLevel)
             {
@@ -437,8 +437,8 @@ public partial class CatalogAPIContext : DbContext
                 if (productAttributesToRemove.Any())
                 {
                     ProductAttributes.RemoveRange(productAttributesToRemove);
-                    Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
-                        JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                    //Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
+                    //    JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
                 }
 
                 var variantIds = ProductVariants
@@ -455,8 +455,8 @@ public partial class CatalogAPIContext : DbContext
                     .ToList();
 
                 VariantAttributes.AddRange(newVariantAttributes);
-                Console.WriteLine("[DEBUG] Inserted VariantAttributes: " +
-                    JsonSerializer.Serialize(newVariantAttributes, new JsonSerializerOptions { WriteIndented = true }));
+                //Console.WriteLine("[DEBUG] Inserted VariantAttributes: " +
+                //    JsonSerializer.Serialize(newVariantAttributes, new JsonSerializerOptions { WriteIndented = true }));
             }
         }
 
@@ -487,8 +487,8 @@ public partial class CatalogAPIContext : DbContext
                 if (productAttributesToRemove.Any())
                 {
                     ProductAttributes.RemoveRange(productAttributesToRemove);
-                    Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
-                        JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                    //Console.WriteLine("[DEBUG] Deleted ProductAttributes: " +
+                    //    JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
                 }
             }
             else
@@ -505,8 +505,8 @@ public partial class CatalogAPIContext : DbContext
                 if (variantAttributesToRemove.Any())
                 {
                     VariantAttributes.RemoveRange(variantAttributesToRemove);
-                    Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
-                        JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
+                    //Console.WriteLine("[DEBUG] Deleted VariantAttributes: " +
+                    //    JsonSerializer.Serialize(variantAttributesToRemove, new JsonSerializerOptions { WriteIndented = true }));
                 }
             }
         }

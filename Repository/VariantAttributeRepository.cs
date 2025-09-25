@@ -1,4 +1,5 @@
 ﻿using CatalogServiceAPI_Electric_Store.Models;
+using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
 
@@ -60,6 +61,27 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         public bool Update(VariantAttributeView entity)
         {
             throw new NotImplementedException();
+        }
+
+        public bool UpdateFromList(List<VariantAttributeView> list)
+        {
+            try {
+            var updateList = list.Select(x => new VariantAttribute {
+               Id =x.id,
+               AttributeId= x.attribute_id,
+               VariantId= x.variant_id,
+               ValueInt= x.value_int,
+               ValueText= x.value_text,
+               ValueDecimal= x.value_decimal,
+
+            }).ToList();
+                _context.VariantAttributes.UpdateRange(updateList);
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex) { 
+             throw ex;
+            }
         }
     }
 }
