@@ -3,6 +3,7 @@ using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -213,8 +214,9 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                     category_id= product.category_id,
 
                 };
-
-                Console.WriteLine("Sản phẩm mới:"+json);
+                var result = HandleProductInsert(en);
+         
+                if(!result) return null;
                 return entity;
 
             }
@@ -226,6 +228,51 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         public bool Update(ProductView entity)
         {
             throw new NotImplementedException();
+        }
+        private bool HandleProductInsert(Product product)
+        {
+            try
+            {
+                var productId = product.Id;
+                var categoryId = product.CategoryId;
+                var categoryAttributes = _context.CategoryAttributes
+            .Where(ca => ca.CategoryId == categoryId && ca.IsVariantLevel == false)
+            .Select(ca => ca.AttributeId)
+            .ToList();
+                var existingPairs = _context.ProductAttributes
+                .Where(pa => pa.ProductId == productId && categoryAttributes.Contains(pa.AttributeId))
+                .Select(pa => pa.AttributeId)
+                .ToHashSet();
+                var newProductAttributes = new List<ProductAttribute>();
+                foreach (var attrId in categoryAttributes)
+                {
+                    if (!existingPairs.Contains(attrId))
+                    {
+                        newProductAttributes.Add(new ProductAttribute
+                        {
+                            ProductId = productId,
+                            AttributeId = attrId
+                        });
+                    }
+                }
+                if (newProductAttributes.Any())
+                {
+                    _context.ProductAttributes.AddRange(newProductAttributes);
+
+                    var result = JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions
+                    {
+                        WriteIndented = true,
+                        ReferenceHandler = ReferenceHandler.IgnoreCycles
+                    });
+                    Console.WriteLine("[DEBUG] Created ProductAttributes: " + result);
+                }
+                _context.SaveChanges();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

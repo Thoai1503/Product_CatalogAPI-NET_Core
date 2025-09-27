@@ -23,6 +23,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 {
                    
                     ProductId = entity.product_id,
+                    Name = entity.name,
                     Sku = entity.sku,
                     Price = entity.price,
                     Status = entity.status,
@@ -42,7 +43,23 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public bool Delete(int id)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var en = _context.ProductVariants.FirstOrDefault(x => x.Id == id);
+                if (en != null)
+                {
+                    _context.ProductVariants.Remove(en);
+                    _context.SaveChanges();
+                    return true;
+                }
+                return false;
+
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
         }
 
         public ProductVariantView FindById(int id)
@@ -73,6 +90,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 {
                     id= e.Id,
                     price= e.Price,
+                    name= e.Name,
                     product_id= e.ProductId,
                     sku = e.Sku,
                     status= e.Status,

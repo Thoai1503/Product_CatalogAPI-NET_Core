@@ -12,6 +12,7 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
         [Required]
         public string sku { get; set; } = null!;
         [Required]
+        public string name { get; set; } =string.Empty;
         public int price { get; set; } = 0;
 
         public int status { get; set; } = 0;

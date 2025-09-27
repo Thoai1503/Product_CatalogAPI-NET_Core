@@ -40,7 +40,9 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
 
-
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
     public override int SaveChanges()
     {
         foreach (var entry in ChangeTracker.Entries<Category>())
@@ -208,94 +210,25 @@ public partial class CatalogAPIContext : DbContext
                 });
                 Console.WriteLine("[DEBUG] Deleted VariantAttributes: " + result);
             }
-        }
-    }
+            var imagesToRemove = ProductImages
+       .Where(pi => pi.VariantId == variant.Id)
+       .ToList();
 
-
-    private void HandleCategoryAttributeChangesOld()
-    {
-        // --------- Insert logic ---------
-        var newCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
-            .Where(e => e.State == EntityState.Added)
-            .ToList();
-
-        foreach (var entry in newCategoryAttributes)
-        {
-            var attributeId = entry.Entity.AttributeId;
-            var categoryId = entry.Entity.CategoryId;
-
-            Console.WriteLine($"[DEBUG] Insert AttributeId: {attributeId}, CategoryId: {categoryId}");
-
-            var productIds = Products
-                .Where(p => p.CategoryId == categoryId)
-                .Select(p => p.Id)
-                .ToList();
-
-            var existingPairs = ProductAttributes
-                .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
-                .Select(pa => pa.ProductId)
-                .ToHashSet();
-
-            var newProductAttributes = new List<ProductAttribute>();
-            foreach (var productId in productIds)
+            if (imagesToRemove.Any())
             {
-                if (!existingPairs.Contains(productId))
-                {
-                    newProductAttributes.Add(new ProductAttribute
-                    {
-                        AttributeId = attributeId,
-                        ProductId = productId,
-                    });
-                }
-            }
+                ProductImages.RemoveRange(imagesToRemove);
 
-            if (newProductAttributes.Any())
-            {
-                ProductAttributes.AddRange(newProductAttributes);
-
-                var result = JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions
+                var result = JsonSerializer.Serialize(imagesToRemove, new JsonSerializerOptions
                 {
                     WriteIndented = true,
                     ReferenceHandler = ReferenceHandler.IgnoreCycles
                 });
-                Console.WriteLine("[DEBUG] Inserted ProductAttributes: " + result);
-            }
-        }
-
-        // --------- Delete logic ---------
-        var deletedCategoryAttributes = ChangeTracker.Entries<CategoryAttribute>()
-            .Where(e => e.State == EntityState.Deleted)
-            .ToList();
-
-        foreach (var entry in deletedCategoryAttributes)
-        {
-            var attributeId = entry.Entity.AttributeId;
-            var categoryId = entry.Entity.CategoryId;
-
-            Console.WriteLine($"[DEBUG] Delete AttributeId: {attributeId}, CategoryId: {categoryId}");
-
-            var productIds = Products
-                .Where(p => p.CategoryId == categoryId)
-                .Select(p => p.Id)
-                .ToList();
-
-            var productAttributesToRemove = ProductAttributes
-                .Where(pa => pa.AttributeId == attributeId && productIds.Contains(pa.ProductId))
-                .ToList();
-
-            if (productAttributesToRemove.Any())
-            {
-                ProductAttributes.RemoveRange(productAttributesToRemove);
-
-                var result = JsonSerializer.Serialize(productAttributesToRemove, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles
-                });
-                Console.WriteLine("[DEBUG] Deleted ProductAttributes: " + result);
+                Console.WriteLine("[DEBUG] Deleted ProductImages: " + result);
             }
         }
     }
+
+
 
 
     private void HandleCategoryAttributeChanges()
@@ -517,60 +450,7 @@ public partial class CatalogAPIContext : DbContext
 
     private void HandleProductChanges()
     {
-        // --------- INSERT Product ---------
-        var newProducts = ChangeTracker.Entries<Product>()
-            .Where(e => e.State == EntityState.Added)
-            .ToList();
 
-        foreach (var entry in newProducts)
-        {
-            var productId = entry.Entity.Id;
-            var categoryId = entry.Entity.CategoryId;
-
-            Console.WriteLine($"[DEBUG] Insert ProductId: {productId}, CategoryId: {categoryId}");
-
-            // Lấy các attribute của category có is_variant_level = false
-            var categoryAttributes = CategoryAttributes
-                .Where(ca => ca.CategoryId == categoryId && ca.IsVariantLevel == false)
-                .Select(ca => ca.AttributeId)
-                .ToList();
-
-            if (!categoryAttributes.Any())
-            {
-                Console.WriteLine("[DEBUG] Không có CategoryAttributes để tạo ProductAttribute");
-                continue;
-            }
-
-            var existingPairs = ProductAttributes
-                .Where(pa => pa.ProductId == productId && categoryAttributes.Contains(pa.AttributeId))
-                .Select(pa => pa.AttributeId)
-                .ToHashSet();
-
-            var newProductAttributes = new List<ProductAttribute>();
-            foreach (var attrId in categoryAttributes)
-            {
-                if (!existingPairs.Contains(attrId))
-                {
-                    newProductAttributes.Add(new ProductAttribute
-                    {
-                        ProductId = productId,
-                        AttributeId = attrId
-                    });
-                }
-            }
-
-            if (newProductAttributes.Any())
-            {
-                ProductAttributes.AddRange(newProductAttributes);
-
-                var result = JsonSerializer.Serialize(newProductAttributes, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles
-                });
-                Console.WriteLine("[DEBUG] Created ProductAttributes: " + result);
-            }
-        }
 
         // --------- DELETE Product ---------
         var deletedProducts = ChangeTracker.Entries<Product>()
@@ -599,10 +479,6 @@ public partial class CatalogAPIContext : DbContext
             }
         }
     }
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Attribute>(entity =>
@@ -765,9 +641,7 @@ public partial class CatalogAPIContext : DbContext
         {
             entity.ToTable("product_image");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.Url)
                 .HasMaxLength(250)
@@ -790,6 +664,11 @@ public partial class CatalogAPIContext : DbContext
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .HasDefaultValue("default")
+                .IsFixedLength()
+                .HasColumnName("name");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.Sku)

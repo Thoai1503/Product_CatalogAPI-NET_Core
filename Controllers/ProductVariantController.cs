@@ -49,8 +49,12 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // DELETE api/<ProductVariantController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            
+            var re = (_repository.Delete(id));
+            return Ok(re);
+
         }
 
         [HttpGet("product/{productId}")]

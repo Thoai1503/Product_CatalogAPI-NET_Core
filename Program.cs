@@ -1,6 +1,7 @@
 using CatalogServiceAPI_Electric_Store.Models;
 using CatalogServiceAPI_Electric_Store.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,6 +33,7 @@ builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<ProductAttributeRepository>();
 builder.Services.AddScoped<ProductVariantRepository>();
 builder.Services.AddScoped<VariantAttributeRepository>();
+builder.Services.AddScoped<ProductImageRepository>();
 
 
 var app = builder.Build();
@@ -44,7 +46,19 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-    
+
+var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+if (!Directory.Exists(uploadsFolder))
+{
+    Directory.CreateDirectory(uploadsFolder);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsFolder),
+    RequestPath = "/Uploads"
+});
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");

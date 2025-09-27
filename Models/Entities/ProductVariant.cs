@@ -7,6 +7,8 @@ public partial class ProductVariant
 {
     public int Id { get; set; }
 
+    public string Name { get; set; } = null!;
+
     public int ProductId { get; set; }
 
     public string Sku { get; set; } = null!;
