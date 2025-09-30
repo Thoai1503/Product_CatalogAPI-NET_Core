@@ -17,7 +17,7 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
 
         public int status { get; set; } = 0;
 
-        public DateTime created_at { get; set; } = DateTime.UtcNow;
+        public DateTime? created_at { get; set; } = DateTime.UtcNow;
 
         public  ProductView? product { get; set; } = null!;
 

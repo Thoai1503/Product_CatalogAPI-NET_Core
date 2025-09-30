@@ -21,9 +21,10 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         }
         // GET: api/<ProductVariantController>
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+           var list = _repository.GetAll();
+            return Ok(list);
         }
 
         // GET api/<ProductVariantController>/5
@@ -45,6 +46,14 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
+                
+        }
+        [HttpPost("Update")]
+        public IActionResult UpdateVariant(ProductVariantView en)
+        {
+            var results = _repository.Update(en);
+            if(!results) return NotFound();
+            return Ok(results);
         }
 
         // DELETE api/<ProductVariantController>/5

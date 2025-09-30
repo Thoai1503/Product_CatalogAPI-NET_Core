@@ -18,6 +18,8 @@
         public BrandView brand { get; set; } = new BrandView();
          
         public  HashSet <ProductAttributeView> product_attribute { get; set; } =new HashSet<ProductAttributeView>();
+
+        public HashSet<ProductVariantView>? product_variant { get; set; } = new HashSet<ProductVariantView>();
         public DateTime created_at { get; set; } = DateTime.Now;
 
     }

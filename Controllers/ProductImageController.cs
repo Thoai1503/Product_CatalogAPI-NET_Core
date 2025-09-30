@@ -85,7 +85,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
                 if(!result) return NotFound();
             }
 
-            return Ok();
+            return Ok(true);
         }
         [HttpGet("variant/{variantId}")]
         public IActionResult GetByVariantId(int variantId) { 

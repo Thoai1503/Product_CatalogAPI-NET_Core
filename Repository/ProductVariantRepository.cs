@@ -2,6 +2,7 @@
 using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Models.ModelView;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace CatalogServiceAPI_Electric_Store.Repository
@@ -74,12 +75,78 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public HashSet<ProductVariantView> GetAll()
         {
-            throw new NotImplementedException();
+            try {
+                var list = _context.ProductVariants.Include(x=>x.ProductImages).Include(x=>x.VariantAttributes).ThenInclude(c=>c.Attribute).ToHashSet();
+
+                return list.Select(x => new ProductVariantView {
+                  id = x.Id,
+                  product_id = x.ProductId,
+                  name = x.Name,
+                  price = x.Price,
+                  sku = x.Sku,
+                  product_images = x.ProductImages.Select(e =>new ProductImageView
+                  {
+                      id = e.Id,
+                      product_id = e.ProductId,
+                      variant_id = e.VariantId,
+                      url = e.Url,
+                  }
+                 ).ToHashSet(),
+                  variant_attributes = x.VariantAttributes.Select(e=> new VariantAttributeView
+                  {
+                      id=e.Id,
+                      variant_id=e.VariantId,
+                      attribute_id =e .AttributeId,
+                      value_decimal =e .ValueDecimal,
+                      value_int =e .ValueInt,
+                      value_text =e .ValueText,
+                      attribute = new AttributeView { 
+                        id=e.Attribute.Id,
+                        name = e.Attribute.Name,
+                        slug = e.Attribute.Slug,
+                        data_type = e.Attribute.DataType,
+                        unit = e.Attribute.Unit,
+                        status = e.Attribute.Status,
+                      }
+                       
+                  }).ToHashSet()
+
+
+                }).ToHashSet();
+            }
+            catch (SqlException ex)
+            {
+                // xử lý riêng cho lỗi SQL
+                throw new Exception("Database error: " + ex.Message, ex);
+            }
+            catch (Exception e)
+            {
+                // xử lý cho các lỗi khác
+                throw;
+            }
+           
         }
 
         public bool Update(ProductVariantView entity)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var en = _context.ProductVariants.FirstOrDefault(e => e.Id == entity.id);
+                if (en != null)
+                {
+                    en.Name = entity.name;
+                    en.Price = entity.price;
+                    en.Sku = entity.sku;
+                    _context.ProductVariants.Update(en);
+                    _context.SaveChanges();
+                    return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
         public HashSet<ProductVariantView> FindByProductId(int id) {
             try {

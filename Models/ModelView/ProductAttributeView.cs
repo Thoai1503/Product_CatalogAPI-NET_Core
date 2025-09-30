@@ -1,4 +1,5 @@
 ﻿using CatalogServiceAPI_Electric_Store.Models.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace CatalogServiceAPI_Electric_Store.Models.ModelView
 {
@@ -6,8 +7,10 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
     {
         public int id { get; set; } = 0;
 
+        [Required]
         public int product_id { get; set; } = 0;
 
+        [Required]
         public int attribute_id { get; set; } = 0;
 
         public string? value_text { get; set; } = string.Empty;

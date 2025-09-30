@@ -1,11 +1,15 @@
 ﻿using CatalogServiceAPI_Electric_Store.Repository;
+using System.ComponentModel.DataAnnotations;
 
 namespace CatalogServiceAPI_Electric_Store.Models.ModelView
 {
     public class CategoryView
     {
         public int id { get; set; } = 0;
+
+        [Required]
         public string name { get; set; } = "";
+        [Required]
         public string slug { get; set; } = "";
         public int parent_id { get; set; } = 0;
 

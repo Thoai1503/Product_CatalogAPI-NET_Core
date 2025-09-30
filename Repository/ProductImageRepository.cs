@@ -42,17 +42,33 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             try
             {
                 var en = _context.ProductImages.FirstOrDefault(x => x.Id == id);
+
                 if (en != null)
                 {
+                    // Lấy tên file từ Url (cắt phần domain hoặc thư mục ảo nếu có)
+                    var fileName = Path.GetFileName(en.Url);
+
+                    // Đường dẫn vật lý đến thư mục Uploads ngoài cùng
+                    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Uploads");
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    // Nếu file tồn tại thì xóa
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+
+                    // Xóa record trong DB
                     _context.ProductImages.Remove(en);
                     _context.SaveChanges();
+
                     return true;
                 }
                 return false;
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw; // có thể log ex trước khi throw
             }
         }
 

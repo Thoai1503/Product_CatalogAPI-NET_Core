@@ -1,7 +1,10 @@
-﻿namespace CatalogServiceAPI_Electric_Store.Models.ModelView
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CatalogServiceAPI_Electric_Store.Models.ModelView
 {
     public class BrandView
     {
+        [Required]
         public string name { get; set; } = "";
 
         public string slug { get; set; } = "";

@@ -19,7 +19,7 @@ public partial class CatalogAPIContext : DbContext
         : base(options)
     {
     }
-
+    #region DbSet Section
     public virtual DbSet<Attribute> Attributes { get; set; }
 
     public virtual DbSet<Brand> Brands { get; set; }
@@ -39,7 +39,7 @@ public partial class CatalogAPIContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
-
+    #endregion
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
@@ -157,6 +157,7 @@ public partial class CatalogAPIContext : DbContext
                 .ToHashSet();
 
             var newVariantAttrs = new List<VariantAttribute>();
+           
             foreach (var attrId in attributeIds)
             {
                 if (!existingAttrIds.Contains(attrId))

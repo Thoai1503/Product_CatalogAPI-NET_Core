@@ -21,6 +21,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         }
         public bool Create(ProductView entity)
         {
+            using var transaction = _context.Database.BeginTransaction();
             try
             {
                 var en = new Product
@@ -28,25 +29,27 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                     Name = entity.name,
                     Description = entity.description,
                     CategoryId = entity.category_id,
-                    
                     BrandId = entity.brand_id,
                     Rating = entity.rating,
                     Status = entity.status,
                     CreatedAt = DateTime.Now,
-
-
                 };
+
                 _context.Products.Add(en);
                 _context.SaveChanges();
-                return true;
 
+                transaction.Commit();
+                return true;
             }
             catch (Exception ex)
             {
+                transaction.Rollback();
+                // TODO: log error ra file hoặc hệ thống logging
+                Console.WriteLine($"Error in Create: {ex.Message}");
                 return false;
-
             }
         }
+
 
         public bool Delete(int id)
         {
@@ -150,7 +153,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         {
 
 
-            return _context.Products.Include(c=>c.Brand).Include(c=>c.Category)
+            return _context.Products.Include(c=>c.Brand).Include(c=>c.Category).Include(c=>c.ProductVariants).ThenInclude(c=>c.ProductImages)
              
                .Select(en => new ProductView
                {
@@ -177,7 +180,23 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                        path =en.Category.Path,
                        level= en.Category.Level
                       
-                   }
+                   },
+                   product_variant = en.ProductVariants.Select(e=>new ProductVariantView 
+                   { 
+                      id=e.Id,
+                      name=e.Name,
+                      price=e.Price,
+                      product_images= e.ProductImages.Select(c=>new ProductImageView
+                      {
+                          id=c.Id,
+                          product_id=c.ProductId,
+                          url=c.Url,
+                          variant_id=c.VariantId,
+                           
+                      }).ToHashSet()
+                      ,
+                   }).ToHashSet()
+                   
                  
                })
                .ToHashSet();
@@ -185,46 +204,52 @@ namespace CatalogServiceAPI_Electric_Store.Repository
 
         public ProductView CreateAndReturn(ProductView product)
         {
+            using var transaction = _context.Database.BeginTransaction();
             try
             {
                 var en = new Product
                 {
-                    Name= product.name,
-                    Description= product.description,
-                    BrandId= product.brand_id,
-                    CategoryId= product.category_id,
-                    Slug =product.slug,
-                    Rating=product.rating,
-                    Status=product.status,
+                    Name = product.name,
+                    Description = product.description,
+                    BrandId = product.brand_id,
+                    CategoryId = product.category_id,
+                    Slug = product.slug,
+                    Rating = product.rating,
+                    Status = product.status,
+                    CreatedAt = DateTime.Now
                 };
+
                 _context.Products.Add(en);
-                _context
-                    .SaveChanges();
-                var json = JsonSerializer.Serialize(en, new JsonSerializerOptions
-                {
-                    WriteIndented = true, // format đẹp dễ đọc
-                    ReferenceHandler = ReferenceHandler.IgnoreCycles // tránh vòng lặp giữa navigation properties
-                });
-                var entity = new ProductView
-                {
-                    id= product.id,
-                    name= product.name,
-                    slug= product.slug,
-                    brand_id= product.brand_id,
-                    category_id= product.category_id,
+                _context.SaveChanges();
 
-                };
+                // Xử lý ProductAttributes
                 var result = HandleProductInsert(en);
-         
-                if(!result) return null;
-                return entity;
+                if (!result)
+                {
+                    transaction.Rollback();
+                    return null;
+                }
 
+                transaction.Commit();
+
+                return new ProductView
+                {
+                    id = en.Id, // lấy Id mới từ DB
+                    name = en.Name,
+                    slug = en.Slug,
+                    brand_id = en.BrandId ?? 0,
+                    category_id = en.CategoryId
+                };
             }
             catch (Exception ex)
             {
-                throw new NotImplementedException();
+                transaction.Rollback();
+                // log error
+                Console.WriteLine($"[ERROR] CreateAndReturn failed: {ex}");
+                throw; // giữ stacktrace
             }
         }
+
         public bool Update(ProductView entity)
         {
             throw new NotImplementedException();

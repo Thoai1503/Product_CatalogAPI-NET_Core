@@ -1,6 +1,7 @@
 ﻿using CatalogServiceAPI_Electric_Store.Models;
 using CatalogServiceAPI_Electric_Store.Models.Entities;
 using CatalogServiceAPI_Electric_Store.Repository.RepoInterface;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace CatalogServiceAPI_Electric_Store.Repository
@@ -9,6 +10,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
     {
         private readonly CatalogAPIContext _context;
 
+       // protected DbSet<ProductAttribute> DbSet => _context.Set<ProductAttribute>();
         public ProductAttributeRepository (CatalogAPIContext context)
         {
             _context = context;

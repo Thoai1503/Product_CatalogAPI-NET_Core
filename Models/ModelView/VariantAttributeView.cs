@@ -17,6 +17,6 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
         public decimal? value_decimal { get; set; } = null!;
         public virtual AttributeView? attribute { get; set; } = null!;
 
-        public virtual ProductVariantView? Variant { get; set; } = null!;
+        public virtual ProductVariantView? variant { get; set; } = null!;
     }
 }
