@@ -34,6 +34,7 @@ builder.Services.AddScoped<ProductAttributeRepository>();
 builder.Services.AddScoped<ProductVariantRepository>();
 builder.Services.AddScoped<VariantAttributeRepository>();
 builder.Services.AddScoped<ProductImageRepository>();
+builder.Services.AddScoped<CartRepository>();
 
 
 var app = builder.Build();

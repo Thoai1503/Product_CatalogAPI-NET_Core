@@ -19,14 +19,24 @@ public partial class CatalogAPIContext : DbContext
         : base(options)
     {
     }
-    #region DbSet Section
+
     public virtual DbSet<Attribute> Attributes { get; set; }
 
     public virtual DbSet<Brand> Brands { get; set; }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<CategoryAttribute> CategoryAttributes { get; set; }
+
+    public virtual DbSet<Inventory> Inventories { get; set; }
+
+    public virtual DbSet<InventoryTransaction> InventoryTransactions { get; set; }
+
+    public virtual DbSet<Order> Orders { get; set; }
+
+    public virtual DbSet<OrderDetail> OrderDetails { get; set; }
 
     public virtual DbSet<Product> Products { get; set; }
 
@@ -39,10 +49,8 @@ public partial class CatalogAPIContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
-    #endregion
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+
+
     public override int SaveChanges()
     {
         foreach (var entry in ChangeTracker.Entries<Category>())
@@ -157,7 +165,7 @@ public partial class CatalogAPIContext : DbContext
                 .ToHashSet();
 
             var newVariantAttrs = new List<VariantAttribute>();
-           
+
             foreach (var attrId in attributeIds)
             {
                 if (!existingAttrIds.Contains(attrId))
@@ -480,6 +488,10 @@ public partial class CatalogAPIContext : DbContext
             }
         }
     }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Attribute>(entity =>
@@ -522,6 +534,20 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Status)
                 .HasDefaultValue(1)
                 .HasColumnName("status");
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.ToTable("cart");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
+
+            entity.HasOne(d => d.Variant).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.VariantId)
+                .HasConstraintName("FK_cart_product_variants");
         });
 
         modelBuilder.Entity<Category>(entity =>
@@ -572,6 +598,66 @@ public partial class CatalogAPIContext : DbContext
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_category_attributes_categories");
+        });
+
+        modelBuilder.Entity<Inventory>(entity =>
+        {
+            entity.ToTable("Inventory");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AvailableQuantity).HasColumnName("available_quantity");
+            entity.Property(e => e.ReversedQuantity).HasColumnName("reversed_quantity");
+            entity.Property(e => e.UpdateAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("update_at");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
+        });
+
+        modelBuilder.Entity<InventoryTransaction>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("InventoryTransaction");
+
+            entity.Property(e => e.ChangeQuantity).HasColumnName("change_quantity");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ReferenceId).HasColumnName("reference_id");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("orders");
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.Discount)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("discount");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Total)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("total");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+        });
+
+        modelBuilder.Entity<OrderDetail>(entity =>
+        {
+            entity.ToTable("order_detail");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
+            entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.VariantId).HasColumnName("variant_id");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -672,6 +758,9 @@ public partial class CatalogAPIContext : DbContext
                 .HasColumnName("name");
             entity.Property(e => e.Price).HasColumnName("price");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.Quantity)
+                .HasDefaultValue(1)
+                .HasColumnName("quantity");
             entity.Property(e => e.Sku)
                 .HasMaxLength(100)
                 .IsFixedLength()

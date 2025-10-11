@@ -17,7 +17,11 @@ public partial class ProductVariant
 
     public int Status { get; set; }
 
+    public int Quantity { get; set; }
+
     public DateTime CreatedAt { get; set; }
+
+    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
 
     public virtual Product Product { get; set; } = null!;
 
