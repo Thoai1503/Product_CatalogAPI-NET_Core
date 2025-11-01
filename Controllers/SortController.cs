@@ -47,7 +47,9 @@ namespace Algorithm_Animation_API.Controllers
             List<SortStep> steps = algorithm.ToLower() switch
             {
                 "bubble" => BubbleSort.Sort(array),
+                "insert" => InsertSort.Sort(array),
                 _ => throw new Exception("Unsupported algorithm")
+             
             };
 
             return Ok(steps);
