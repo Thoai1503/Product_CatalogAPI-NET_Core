@@ -61,7 +61,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             try
             {
                 var en = _context.Products.Include(n=>n.ProductAttributes).Include(p => p.Category).ThenInclude(c => c.CategoryAttributes)
-                    .ThenInclude(ca => ca.Attribute).Include(c => c.Brand).Include(pa=>pa.ProductAttributes).ThenInclude(a=>a.Attribute).FirstOrDefault(c=>c.Id==id);
+                    .ThenInclude(ca => ca.Attribute).ThenInclude(c => c.AttributeValues).Include(c => c.Brand).Include(pa=>pa.ProductAttributes).ThenInclude(a=>a.Attribute).ThenInclude(c=>c.AttributeValues).FirstOrDefault(c=>c.Id==id);
 
                 var json = JsonSerializer.Serialize(en, new JsonSerializerOptions
                 {
@@ -109,11 +109,18 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                                  slug = ca.Attribute.Slug,
                                  data_type = ca.Attribute.DataType,
                                  unit = ca.Attribute.Unit,
-                                 status = ca.Attribute.Status
+                                 status = ca.Attribute.Status,
+                                 attribute_values = ca.Attribute.AttributeValues?.Select(av=> new AttributeValueView
+                                 {
+                                     id= av.Id,
+                                     attribute_id= av.AttributeId,
+                                     value= av.Value
+                                 }).ToHashSet() ?? new HashSet<AttributeValueView>()
                              }
                          }).ToHashSet() ?? new HashSet<CategoryAttributeView>(),
                          
                     },
+                   
                     product_attribute = en.ProductAttributes?.Select(e=> new ProductAttributeView
                     {
                         id = e.Id,
@@ -128,12 +135,20 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                             name=e.Attribute.Name,
                             slug = e.Attribute.Slug,
                             data_type = e.Attribute.DataType, unit = e.Attribute.Unit,
-                            status = e.Attribute.Status
+                           
+                         
+                               attribute_values = e.Attribute.AttributeValues?.Select(av => new AttributeValueView
+                               {
+                                   id = av.Id,
+                                   attribute_id = av.AttributeId,
+                                   value = av.Value
+                               }).ToHashSet() ?? new HashSet<AttributeValueView>()
 
                         }
 
 
-                    }).ToHashSet() ?? new HashSet<ProductAttributeView>(),
+                    }
+                    ).ToHashSet() ?? new HashSet<ProductAttributeView>(),
                 };
                 
             }

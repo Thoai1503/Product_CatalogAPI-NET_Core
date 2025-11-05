@@ -21,9 +21,10 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         }
         // GET: api/<ProductVariantController>
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get([FromQuery] FilterState st)
         {
-           var list = _repository.GetAll();
+            Console.WriteLine("Query:" + st);
+           var list = _repository.GetAll(st);
             return Ok(list);
         }
 

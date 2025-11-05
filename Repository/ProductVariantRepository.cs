@@ -11,9 +11,11 @@ namespace CatalogServiceAPI_Electric_Store.Repository
     {
         private readonly CatalogAPIContext _context;
 
+
         public ProductVariantRepository(CatalogAPIContext context)
         {
             _context = context;
+ 
         }
 
         public bool Create(ProductVariantView entity)
@@ -73,10 +75,22 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             throw new NotImplementedException();
         }
 
-        public HashSet<ProductVariantView> GetAll()
+        public HashSet<ProductVariantView> GetAll(FilterState st)
         {
             try {
-                var list = _context.ProductVariants.Include(x=>x.ProductImages).Include(x=>x.VariantAttributes).ThenInclude(c=>c.Attribute).ToHashSet();
+                var list = _context.ProductVariants.Include(x=>x.ProductImages).Include(x=>x.VariantAttributes).ThenInclude(c=>c.AttributeValue).ThenInclude(c=>c.Attribute).Include(c => c.Product).ThenInclude(c=>c.ProductAttributes).ThenInclude(c=>c.Attribute).ToHashSet();
+                if (st.sortBy!="" && st.order!="") {
+                    if (st.sortBy == "created_at")
+                    {
+                        list = st.order == "asc" ? list.OrderBy(e => e.CreatedAt).ToHashSet() : list.OrderByDescending(e => e.CreatedAt).ToHashSet();
+                    }   
+                    if(st.sortBy == "price")
+                    {
+                        list = st.order == "asc" ? list.OrderBy(e => e.Price).ToHashSet() : list.OrderByDescending(e => e.Price).ToHashSet();
+                    }
+                }
+
+                list = list.Skip(st.skip).Take(st.take).ToHashSet();
 
                 return list.Select(x => new ProductVariantView {
                   id = x.Id,
@@ -84,7 +98,33 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                   name = x.Name,
                   price = x.Price,
                   sku = x.Sku,
-                  product_images = x.ProductImages.Select(e =>new ProductImageView
+                  product= new ProductView {
+                    id = x.Product.Id,
+                    name = x.Product.Name,
+                    slug = x.Product.Slug,
+                    description = x.Product.Description,
+                    status = x.Product.Status,
+                    created_at = x.Product.CreatedAt,
+                    product_attribute = x.Product.ProductAttributes.Select(e=> new ProductAttributeView
+                    {
+                        id = e.Id,
+                        product_id = e.ProductId,
+                        attribute_id = e.AttributeId,
+                        value_decimal = e.ValueDecimal,
+                        value_int = e.ValueInt,
+                        value_text = e.ValueText,
+                        attribute = new AttributeView
+                        {
+                            id = e.Attribute.Id,
+                            name = e.Attribute.Name,
+                            slug = e.Attribute.Slug,
+                            data_type = e.Attribute.DataType,
+                            unit = e.Attribute.Unit,
+                            status = e.Attribute.Status,
+                        }
+                    }).ToHashSet()
+                  },
+                    product_images = x.ProductImages.Select(e =>new ProductImageView
                   {
                       id = e.Id,
                       product_id = e.ProductId,
@@ -100,14 +140,21 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                       value_decimal =e .ValueDecimal,
                       value_int =e .ValueInt,
                       value_text =e .ValueText,
-                      attribute = new AttributeView { 
+                      attribute_value_id =e.AttributeValueId,
+                      attribute_value = e.AttributeValue !=null? new AttributeValueView {
+                        id=e.AttributeValue!=null? e.AttributeValue.Id:0,
+                        attribute_id = e.AttributeValue!=null? e.AttributeValue.AttributeId:0,
+                        value = e.AttributeValue!=null? e.AttributeValue.Value!:string.Empty
+                      }:null,
+                      attribute = e.Attribute!=null? new AttributeView { 
                         id=e.Attribute.Id,
                         name = e.Attribute.Name,
                         slug = e.Attribute.Slug,
                         data_type = e.Attribute.DataType,
                         unit = e.Attribute.Unit,
                         status = e.Attribute.Status,
-                      }
+                      }:null
+
                        
                   }).ToHashSet()
 
@@ -151,7 +198,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
         public HashSet<ProductVariantView> FindByProductId(int id) {
             try {
 
-                var en = _context.ProductVariants.Include(e=>e.VariantAttributes).ThenInclude(c=>c.Attribute).Where(a=>a.ProductId==id).ToHashSet(); 
+                var en = _context.ProductVariants.Include(e=>e.VariantAttributes).ThenInclude(c=>c.AttributeValue).ThenInclude(c=>c.Attribute).ThenInclude(c=>c.AttributeValues).Where(a=>a.ProductId==id).ToHashSet(); 
 
                 return en.Select(e=>new ProductVariantView
                 {
@@ -170,15 +217,23 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                        value_decimal= en.ValueDecimal,
                        value_int= en.ValueInt,
                        value_text= en.ValueText,
-                       attribute = new AttributeView
-                       {
-                           id =en.Attribute.Id,
-                           name=en.Attribute.Name,
-                           data_type=en.Attribute.DataType,
-                           unit=en.Attribute.Unit,
-                           slug=en.Attribute.Slug,
-                           status=en.Attribute.Status,
-                       }
+                       attribute_value_id= en.AttributeValueId,
+                        attribute_value =en.AttributeValue !=null?  new AttributeValueView
+                        {
+                            id = en.AttributeValue.Id,
+                            attribute_id = en.AttributeValue.AttributeId,
+                            value = en.AttributeValue.Value
+                        }:null,
+
+                        attribute =   en.Attribute !=null? new AttributeView
+                        {
+                            id = en.Attribute.Id,
+                            name = en.Attribute.Name,
+                            data_type = en.Attribute.DataType,
+                            unit = en.Attribute.Unit,
+                            slug = en.Attribute.Slug,
+                            status = en.Attribute.Status,
+                        }  :null
 
                     }).ToHashSet() ?? new HashSet<VariantAttributeView>(),
 
@@ -189,6 +244,63 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             catch (Exception e) {
                 return null;
             }
-        } 
+        }
+
+        public HashSet<ProductVariantView> GetAll()
+        {
+            try
+            {
+                var list = _context.ProductVariants.Include(x => x.ProductImages).Include(x => x.VariantAttributes).ThenInclude(c => c.Attribute).ToHashSet();
+
+                return list.Select(x => new ProductVariantView
+                {
+                    id = x.Id,
+                    product_id = x.ProductId,
+                    name = x.Name,
+                    price = x.Price,
+                    sku = x.Sku,
+                    product_images = x.ProductImages.Select(e => new ProductImageView
+                    {
+                        id = e.Id,
+                        product_id = e.ProductId,
+                        variant_id = e.VariantId,
+                        url = e.Url,
+                    }
+                 ).ToHashSet(),
+                    variant_attributes = x.VariantAttributes.Select(e => new VariantAttributeView
+                    {
+                        id = e.Id,
+                        variant_id = e.VariantId,
+                        attribute_id = e.AttributeId,
+                        value_decimal = e.ValueDecimal,
+                        value_int = e.ValueInt,
+                        value_text = e.ValueText,
+                        attribute = new AttributeView
+                        {
+                            id = e.Attribute.Id,
+                            name = e.Attribute.Name,
+                            slug = e.Attribute.Slug,
+                            data_type = e.Attribute.DataType,
+                            unit = e.Attribute.Unit,
+                            status = e.Attribute.Status,
+                        }
+
+                    }).ToHashSet()
+
+
+                }).ToHashSet();
+            }
+            catch (SqlException ex)
+            {
+                // xử lý riêng cho lỗi SQL
+                throw new Exception("Database error: " + ex.Message, ex);
+            }
+            catch (Exception e)
+            {
+                // xử lý cho các lỗi khác
+                throw;
+            }
+
+        }
     }
 }

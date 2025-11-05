@@ -14,4 +14,14 @@ public partial class Order
     public decimal Total { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public int Status { get; set; }
+
+    public int? AddressId { get; set; }
+
+    public virtual UserAddress? Address { get; set; }
+
+    public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+    public virtual User User { get; set; } = null!;
 }

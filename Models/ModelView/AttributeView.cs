@@ -20,5 +20,7 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
 
         public int status { get; set; } = 1;
         public int is_selected { get; set; } = 0;
+
+        public HashSet<AttributeValueView> attribute_values { get; set; } = [];
     }
 }

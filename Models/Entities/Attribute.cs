@@ -9,13 +9,15 @@ public partial class Attribute
 
     public string Name { get; set; } = null!;
 
-    public string Slug { get; set; } = null!;
+    public string? Slug { get; set; }
 
     public string DataType { get; set; } = null!;
 
     public string Unit { get; set; } = null!;
 
     public int Status { get; set; }
+
+    public virtual ICollection<AttributeValue> AttributeValues { get; set; } = new List<AttributeValue>();
 
     public virtual ICollection<CategoryAttribute> CategoryAttributes { get; set; } = new List<CategoryAttribute>();
 

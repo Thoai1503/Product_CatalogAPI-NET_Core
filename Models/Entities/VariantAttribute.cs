@@ -17,7 +17,11 @@ public partial class VariantAttribute
 
     public string? ValueText { get; set; }
 
+    public int? AttributeValueId { get; set; }
+
     public virtual Attribute Attribute { get; set; } = null!;
+
+    public virtual AttributeValue? AttributeValue { get; set; }
 
     public virtual ProductVariant Variant { get; set; } = null!;
 }

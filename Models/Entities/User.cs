@@ -20,4 +20,8 @@ public partial class User
     public byte[]? CreatedAt { get; set; }
 
     public int Id { get; set; }
+
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
 }

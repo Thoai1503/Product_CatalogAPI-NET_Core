@@ -13,11 +13,11 @@ namespace CatalogServiceAPI_Electric_Store.Models.ModelView
         [Required]
         public int attribute_id { get; set; } = 0;
 
-        public string? value_text { get; set; } = string.Empty;
+        public string? value_text { get; set; } = null;
 
-        public decimal? value_decimal { get; set; } = decimal.Zero;
+        public decimal? value_decimal { get; set; } = null;
 
-        public int? value_int { get; set; } = 0;
+        public int? value_int { get; set; } = null;
 
         public  AttributeView? attribute { get; set; } = null!;
 

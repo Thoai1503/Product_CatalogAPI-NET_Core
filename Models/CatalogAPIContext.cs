@@ -22,6 +22,8 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<Attribute> Attributes { get; set; }
 
+    public virtual DbSet<AttributeValue> AttributeValues { get; set; }
+
     public virtual DbSet<Brand> Brands { get; set; }
 
     public virtual DbSet<Cart> Carts { get; set; }
@@ -29,6 +31,8 @@ public partial class CatalogAPIContext : DbContext
     public virtual DbSet<Category> Categories { get; set; }
 
     public virtual DbSet<CategoryAttribute> CategoryAttributes { get; set; }
+
+    public virtual DbSet<District> Districts { get; set; }
 
     public virtual DbSet<Inventory> Inventories { get; set; }
 
@@ -46,10 +50,15 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<ProductVariant> ProductVariants { get; set; }
 
+    public virtual DbSet<Province> Provinces { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<UserAddress> UserAddresses { get; set; }
 
     public virtual DbSet<VariantAttribute> VariantAttributes { get; set; }
 
+    public virtual DbSet<Ward> Wards { get; set; }
 
     public override int SaveChanges()
     {
@@ -488,6 +497,7 @@ public partial class CatalogAPIContext : DbContext
             }
         }
     }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
@@ -516,6 +526,23 @@ public partial class CatalogAPIContext : DbContext
                 .HasColumnName("unit");
         });
 
+        modelBuilder.Entity<AttributeValue>(entity =>
+        {
+            entity.ToTable("attribute_value");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.Value)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasColumnName("value");
+
+            entity.HasOne(d => d.Attribute).WithMany(p => p.AttributeValues)
+                .HasForeignKey(d => d.AttributeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_attribute_value_attributes");
+        });
+
         modelBuilder.Entity<Brand>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__brands__3213E83FBBDEC841");
@@ -542,11 +569,15 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
+            entity.Property(e => e.UnitPrice)
+                .HasColumnType("decimal(18, 0)")
+                .HasColumnName("unit_price");
             entity.Property(e => e.UserId).HasColumnName("user_id");
             entity.Property(e => e.VariantId).HasColumnName("variant_id");
 
             entity.HasOne(d => d.Variant).WithMany(p => p.Carts)
                 .HasForeignKey(d => d.VariantId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_cart_product_variants");
         });
 
@@ -600,6 +631,33 @@ public partial class CatalogAPIContext : DbContext
                 .HasConstraintName("FK_category_attributes_categories");
         });
 
+        modelBuilder.Entity<District>(entity =>
+        {
+            entity.ToTable("districts");
+
+            entity.HasIndex(e => e.ProvinceId, "IX_districts_province_id");
+
+            entity.HasIndex(e => e.Code, "UQ_districts_code").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("code");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.ProvinceId).HasColumnName("province_id");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+
+            entity.HasOne(d => d.Province).WithMany(p => p.Districts)
+                .HasForeignKey(d => d.ProvinceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_districts_provinces");
+        });
+
         modelBuilder.Entity<Inventory>(entity =>
         {
             entity.ToTable("Inventory");
@@ -632,10 +690,10 @@ public partial class CatalogAPIContext : DbContext
 
         modelBuilder.Entity<Order>(entity =>
         {
-            entity
-                .HasNoKey()
-                .ToTable("orders");
+            entity.ToTable("orders");
 
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AddressId).HasColumnName("address_id");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
@@ -643,11 +701,22 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Discount)
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("discount");
-            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(2)
+                .HasColumnName("status");
             entity.Property(e => e.Total)
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("total");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+
+            entity.HasOne(d => d.Address).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.AddressId)
+                .HasConstraintName("FK_orders_user_addresses");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Orders)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_users");
         });
 
         modelBuilder.Entity<OrderDetail>(entity =>
@@ -658,6 +727,11 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.OrderId).HasColumnName("order_id");
             entity.Property(e => e.Quantity).HasColumnName("quantity");
             entity.Property(e => e.VariantId).HasColumnName("variant_id");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.OrderDetails)
+                .HasForeignKey(d => d.OrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_order_detail_orders");
         });
 
         modelBuilder.Entity<Product>(entity =>
@@ -775,6 +849,25 @@ public partial class CatalogAPIContext : DbContext
                 .HasConstraintName("FK_product_variants_products");
         });
 
+        modelBuilder.Entity<Province>(entity =>
+        {
+            entity.ToTable("provinces");
+
+            entity.HasIndex(e => e.Code, "UQ_provinces_code").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("code");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+        });
+
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__users__3213E83FA25F67D3");
@@ -805,12 +898,68 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Status).HasColumnName("status");
         });
 
+        modelBuilder.Entity<UserAddress>(entity =>
+        {
+            entity.ToTable("user_addresses", tb => tb.HasTrigger("trg_user_addresses_default"));
+
+            entity.HasIndex(e => e.UserId, "IX_user_addresses_user_id");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AddressDetail)
+                .HasMaxLength(500)
+                .HasColumnName("address_detail");
+            entity.Property(e => e.AddressType)
+                .HasDefaultValue(1)
+                .HasColumnName("address_type");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime")
+                .HasColumnName("created_at");
+            entity.Property(e => e.DistrictId).HasColumnName("district_id");
+            entity.Property(e => e.FullName)
+                .HasMaxLength(100)
+                .HasColumnName("full_name");
+            entity.Property(e => e.IsDefault).HasColumnName("is_default");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .HasColumnName("phone");
+            entity.Property(e => e.ProvinceId).HasColumnName("province_id");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+            entity.Property(e => e.UpdatedAt)
+                .HasColumnType("datetime")
+                .HasColumnName("updated_at");
+            entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.WardId).HasColumnName("ward_id");
+
+            entity.HasOne(d => d.District).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.DistrictId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_addresses_districts");
+
+            entity.HasOne(d => d.Province).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.ProvinceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_addresses_provinces");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_user_addresses_users");
+
+            entity.HasOne(d => d.Ward).WithMany(p => p.UserAddresses)
+                .HasForeignKey(d => d.WardId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_addresses_wards");
+        });
+
         modelBuilder.Entity<VariantAttribute>(entity =>
         {
             entity.ToTable("variant_attribute");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.AttributeValueId).HasColumnName("attribute_value_id");
             entity.Property(e => e.ValueDecimal)
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("value_decimal");
@@ -825,10 +974,41 @@ public partial class CatalogAPIContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_variant_attribute_attributes");
 
+            entity.HasOne(d => d.AttributeValue).WithMany(p => p.VariantAttributes)
+                .HasForeignKey(d => d.AttributeValueId)
+                .HasConstraintName("FK_variant_attribute_attribute_value");
+
             entity.HasOne(d => d.Variant).WithMany(p => p.VariantAttributes)
                 .HasForeignKey(d => d.VariantId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_variant_attribute_product_variants");
+        });
+
+        modelBuilder.Entity<Ward>(entity =>
+        {
+            entity.ToTable("wards");
+
+            entity.HasIndex(e => e.DistrictId, "IX_wards_district_id");
+
+            entity.HasIndex(e => e.Code, "UQ_wards_code").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code)
+                .HasMaxLength(20)
+                .IsUnicode(false)
+                .HasColumnName("code");
+            entity.Property(e => e.DistrictId).HasColumnName("district_id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Status)
+                .HasDefaultValue(1)
+                .HasColumnName("status");
+
+            entity.HasOne(d => d.District).WithMany(p => p.Wards)
+                .HasForeignKey(d => d.DistrictId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_wards_districts");
         });
 
         OnModelCreatingPartial(modelBuilder);
