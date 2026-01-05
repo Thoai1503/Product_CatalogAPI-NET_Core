@@ -22,17 +22,19 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         // GET: api/<ProductVariantController>
         [HttpGet]
         public IActionResult Get([FromQuery] FilterState st)
-        {
+            {
+            Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(st.attributes));
             Console.WriteLine("Query:" + st);
-           var list = _repository.GetAll(st);
+           var list = _repository.GetPaginationData(st);
             return Ok(list);
         }
 
         // GET api/<ProductVariantController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public IActionResult Get(int id)
         {
-            return "value";
+            var result = _repository.FindById(id);
+            return Ok(result);
         }
 
         // POST api/<ProductVariantController>

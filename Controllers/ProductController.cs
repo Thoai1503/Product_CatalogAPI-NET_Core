@@ -35,11 +35,22 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
-        public IActionResult Post([FromBody] ProductView product)
+        public IActionResult Post([FromBody] ProductAddAndUpdateState product)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
-            var result = _repo.CreateAndReturn(product);
+            var result = _repo.CreateAndReturn(
+                new ProductView
+                {
+                    name = product.name,
+                    description = product.description,
+                    category_id = product.category_id,
+                    brand_id = product.brand_id,
+                    slug = product.slug,
+                    rating = product.rating,
+                    status = product.status
+                }
+                );
             if (result== null) return StatusCode(500, new { message = "Failed to create product" });
 
             return Ok(result);

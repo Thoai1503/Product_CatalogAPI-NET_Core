@@ -174,31 +174,46 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             }
 
         }
-        public HashSet<CategoryAttributeView> GetByCategoryId(int categoryId)
+        public HashSet<CategoryAttributeView> GetByCategory(string category)
         {
 
             try
-            {
-                var categoryAttributes = _context.CategoryAttributes.Include
-                    (ca => ca.Attribute)
-                    .Where(ca => ca.CategoryId == categoryId)
+                {
+                var categoryAttributes = _context.CategoryAttributes.Include(c=>c.Category).Include
+                    (ca => ca.Attribute).ThenInclude(a => a.AttributeValues)
+                    .Where(ca => ca.Category.Slug.ToLower()  == category.ToLower())
                     .Select(ca => new CategoryAttributeView
                     {
                         id = ca.Id,
                         category_id = ca.CategoryId,
                         attribute_id = ca.AttributeId,
-                    
+                        category = new CategoryView
+                        {
+                            id = ca.Category.Id,
+                            name = ca.Category.Name.Trim(),
+                            slug = ca.Category.Slug.Trim(),
+                      
+                        },
+
                         is_filterable = ca.IsFilterable,
                         is_variant_level = ca.IsVariantLevel,
                         is_required = ca.IsRequired,
+                        
                         attribute = new AttributeView
                         {
                             id = ca.Attribute.Id,
-                            name = ca.Attribute.Name,
-                            slug = ca.Attribute.Slug,
+                            name = ca.Attribute.Name.Trim(),
+                            slug = ca.Attribute.Slug.Trim(),
                             data_type = ca.Attribute.DataType,
                             unit = ca.Attribute.Unit,
                             status = ca.Attribute.Status,
+                            attribute_values = ca.Attribute.AttributeValues.Select(av => new AttributeValueView
+                            {
+                                id = av.Id,
+                                attribute_id = av.AttributeId,
+                                value = av.Value,
+                            
+                            }).ToHashSet()
 
                         }
                     }).ToHashSet();
@@ -212,5 +227,6 @@ namespace CatalogServiceAPI_Electric_Store.Repository
             }
 
         }
+     
     }
 }

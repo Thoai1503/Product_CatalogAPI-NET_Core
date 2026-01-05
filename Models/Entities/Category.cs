@@ -23,5 +23,7 @@ public partial class Category
 
     public virtual ICollection<CategoryAttribute> CategoryAttributes { get; set; } = new List<CategoryAttribute>();
 
+    public virtual ICollection<CategoryBrand> CategoryBrands { get; set; } = new List<CategoryBrand>();
+
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

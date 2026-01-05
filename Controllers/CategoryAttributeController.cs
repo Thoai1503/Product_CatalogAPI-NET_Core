@@ -1,4 +1,5 @@
-﻿using CatalogServiceAPI_Electric_Store.Repository;
+﻿using CatalogServiceAPI_Electric_Store.Models.ModelView;
+using CatalogServiceAPI_Electric_Store.Repository;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -11,17 +12,17 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
     {
         private readonly CategoryAttributeRepository _categoryAttributeRepository;
 
-    
-        public  CategoryAttributeController(CategoryAttributeRepository categoryAttributeRepository)
+
+        public CategoryAttributeController(CategoryAttributeRepository categoryAttributeRepository)
         {
-          _categoryAttributeRepository = categoryAttributeRepository;
+            _categoryAttributeRepository = categoryAttributeRepository;
         }
 
         // GET: api/<CategoryAttributeController>
         [HttpGet]
         public IActionResult Get()
         {
-           
+
             var categoryAttributes = _categoryAttributeRepository.GetAll();
             return Ok(categoryAttributes);
         }
@@ -38,45 +39,46 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         public IActionResult Post([FromBody] CategoryAttributeView en)
         {
             var result = _categoryAttributeRepository.Create(en);
-            if (!result)  BadRequest(result);
+            if (!result) BadRequest(result);
             return Ok(result);
         }
 
         // PUT api/<CategoryAttributeController>/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, CategoryAttributeView en)
+        public IActionResult Update(int id, [FromBody] CategoryAttributeUpdateState en)
         {
-        var entity = _categoryAttributeRepository.FindById(id);
-            if (entity != null)
-            {
-                entity.category_id = entity.category_id;
-                entity.attribute_id = entity.attribute_id;
-                entity.is_filterable = en.is_filterable;
-                entity.is_variant_level = en.is_variant_level;
-                entity.is_required = en.is_required;
-                var result = _categoryAttributeRepository.Update(entity);
-                if (result)
-                {
-                    return Ok(entity);
-                }
-                return BadRequest();
-            }
-            return NotFound();
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
+            var entity = _categoryAttributeRepository.FindById(id);
+            if (entity == null)
+                return NotFound(new { message = "Category attribute not found" });
 
+            // Cập nhật dữ liệu
+            entity.category_id = en.category_id;
+            entity.attribute_id = en.attribute_id;
+            entity.is_filterable = en.is_filterable;
+            entity.is_variant_level = en.is_variant_level;
+            entity.is_required = en.is_required;
+
+            var result = _categoryAttributeRepository.Update(entity);
+            if (!result)
+                return BadRequest(new { success = false, message = "Failed to update category attribute" });
+
+            return Ok( entity );
         }
 
         // DELETE api/<CategoryAttributeController>/5
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-          var re=  _categoryAttributeRepository.Delete(id);
+            var re = _categoryAttributeRepository.Delete(id);
             return Ok(re);
         }
-        [HttpGet("category/{categoryId}")]
-        public IActionResult GetByCategoryId(int categoryId)
+        [HttpGet("category/{category}")]
+        public IActionResult GetByCategory(string category)
         {
-            var categoryAttributes = _categoryAttributeRepository.GetByCategoryId(categoryId);
+            var categoryAttributes = _categoryAttributeRepository.GetByCategory(category);
             return Ok(categoryAttributes);
         }
         [HttpPost("category/{categoryId}")]
@@ -95,7 +97,12 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
             }
             return Ok(true);
         }
-             
-          
+        //[HttpGet("category/{categoryId}")]
+        //public IActionResult GetAttributesByCategoryId(int categoryId)
+        //{
+        //    var categoryAttributes = _categoryAttributeRepository.GetByCategoryId(categoryId);
+        //    return Ok(categoryAttributes);
+        //}
+
     }
 }

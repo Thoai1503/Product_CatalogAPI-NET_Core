@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CatalogServiceAPI_Electric_Store.Repository;
 
@@ -21,6 +22,9 @@ public  class CategoryAttributeView
 
     public bool is_required { get; set; } = false;
 
-    public AttributeView attribute { get; set; } = new AttributeView();
+
+    public CategoryView? category { get; set; }= new CategoryView();
+
+    public AttributeView? attribute { get; set; }  = new AttributeView();
 
 }

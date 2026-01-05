@@ -73,6 +73,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                ValueInt= x.value_int,
                ValueText= x.value_text,
                ValueDecimal= x.value_decimal,
+                AttributeValueId= x.attribute_value_id
 
             }).ToList();
                 _context.VariantAttributes.UpdateRange(updateList);

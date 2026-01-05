@@ -32,6 +32,8 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<CategoryAttribute> CategoryAttributes { get; set; }
 
+    public virtual DbSet<CategoryBrand> CategoryBrands { get; set; }
+
     public virtual DbSet<District> Districts { get; set; }
 
     public virtual DbSet<Inventory> Inventories { get; set; }
@@ -498,9 +500,10 @@ public partial class CatalogAPIContext : DbContext
         }
     }
 
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=Catalog_ElectricStoreDB.mssql.somee.com;Database=Catalog_ElectricStoreDB;User ID=John333_SQLLogin_1;Password=1etw5yoon4;TrustServerCertificate=True;");
+        => optionsBuilder.UseSqlServer("Server=103.90.225.130,1433;Database=Catalog_ElectricStoreDB;User ID=sa;Password=Thoaivip@13;TrustServerCertificate=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -629,6 +632,25 @@ public partial class CatalogAPIContext : DbContext
                 .HasForeignKey(d => d.CategoryId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_category_attributes_categories");
+        });
+
+        modelBuilder.Entity<CategoryBrand>(entity =>
+        {
+            entity.ToTable("category_brands");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.BrandId).HasColumnName("brand_id");
+            entity.Property(e => e.CategoryId).HasColumnName("category_id");
+
+            entity.HasOne(d => d.Brand).WithMany(p => p.CategoryBrands)
+                .HasForeignKey(d => d.BrandId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_category_brands_brands");
+
+            entity.HasOne(d => d.Category).WithMany(p => p.CategoryBrands)
+                .HasForeignKey(d => d.CategoryId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_category_brands_categories");
         });
 
         modelBuilder.Entity<District>(entity =>
