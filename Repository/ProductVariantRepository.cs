@@ -383,6 +383,9 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                         .ThenInclude(c => c.ProductAttributes)
                             .ThenInclude(c => c.Attribute);
 
+                var maxPriceInDb = query.Max(e => e.Price);
+                var minPriceInDb = query.Min(e => e.Price);
+
                 // Apply category filter
                 if (!string.IsNullOrEmpty(st.category))
                 {
@@ -405,7 +408,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                     query = query.Where(e => st.categoryIds.Contains(e.Product.CategoryId));
                 }
 
-
+                // Apply sorting
                 if (!string.IsNullOrEmpty(st.sortBy) && !string.IsNullOrEmpty(st.order))
                 {
                     query = st.sortBy.ToLower() switch
@@ -423,33 +426,30 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 // Execute query and get results
                 var list = query.ToList();
 
+                // Filter by Brand (attribute key "0")
                 var brandList = st.attributes.FirstOrDefault(at => at.Key == "0");
-
                 if (brandList.Key != null && brandList.Value != null)
                 {
                     var va = brandList.Value;
-
                     list = list.Where(
                         variant => va.Any(v => variant.Product.BrandId == (int.TryParse(v.Trim(), out var attrValId) ? attrValId : 0))
-
-
-                        ).ToList();
-
-
+                    ).ToList();
                     st.attributes.Remove("0");
                 }
+
+                // Filter by attributes (both VariantAttributes and ProductAttributes)
                 if (st.attributes != null && st.attributes.Count > 0)
                 {
-
                     foreach (var attr in st.attributes)
                     {
                         if (!int.TryParse(attr.Key, out var attributeId))
                             continue;
 
-
                         list = list.Where(variant =>
                             attr.Value.Any(value =>
-                                variant.VariantAttributes.Any(va =>
+                            {
+                                // Check in VariantAttributes
+                                bool matchInVariantAttr = variant.VariantAttributes.Any(va =>
                                     va.AttributeId == attributeId &&
                                     (
                                         (va.ValueText != null && va.ValueText.Trim().Equals(value.Trim(), StringComparison.OrdinalIgnoreCase)) ||
@@ -457,84 +457,62 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                                         (va.ValueDecimal != null && va.ValueDecimal.ToString() == value.Trim()) ||
                                         (va.AttributeValueId != null && va.AttributeValueId == (int.TryParse(value.Trim(), out var attrValId) ? attrValId : 0))
                                     )
-                                )
-                            )
+                                );
+
+                                // Check in ProductAttributes
+                                bool matchInProductAttr = variant.Product.ProductAttributes.Any(pa =>
+                                    pa.AttributeId == attributeId &&
+                                    (
+                                        (pa.ValueText != null && pa.ValueText.Trim().Equals(value.Trim(), StringComparison.OrdinalIgnoreCase)) ||
+                                        (pa.ValueInt != null && pa.ValueInt.ToString() == value.Trim()) ||
+                                        (pa.ValueDecimal != null && pa.ValueDecimal.ToString() == value.Trim()) ||
+                                        (pa.AttributeValueId != null && pa.AttributeValueId == (int.TryParse(value.Trim(), out var attrValId) ? attrValId : 0))
+                                    )
+                                );
+
+                                // Return true if match found in either VariantAttributes or ProductAttributes
+                                return matchInVariantAttr || matchInProductAttr;
+                            })
                         ).ToList();
                     }
                 }
 
-
                 var totalCount = list.Count;
                 var paginatedList = list.Skip(st.skip).Take(st.take).ToList();
 
-
-                return
-                    new ProductVariantPaginated
+                return new ProductVariantPaginated
+                {
+                    data = paginatedList.Select(x => new ProductVariantView
                     {
-                        data = paginatedList.Select(x => new ProductVariantView
+                        id = x.Id,
+                        product_id = x.ProductId,
+                        name = x.Name,
+                        price = x.Price,
+                        sku = x.Sku,
+                        created_at = x.CreatedAt,
+                        product = new ProductView
                         {
-                            id = x.Id,
-                            product_id = x.ProductId,
-                            name = x.Name,
-                            price = x.Price,
-                            sku = x.Sku,
-                            created_at = x.CreatedAt,
-                            product = new ProductView
+                            id = x.Product.Id,
+                            name = x.Product.Name,
+                            slug = x.Product.Slug,
+                            description = x.Product.Description,
+                            status = x.Product.Status,
+                            category = new CategoryView
                             {
-                                id = x.Product.Id,
-                                name = x.Product.Name,
-                                slug = x.Product.Slug,
-                                description = x.Product.Description,
-                                status = x.Product.Status,
-                                category = new CategoryView
-                                {
-                                    id = x.Product.Category.Id,
-                                    name = x.Product.Category.Name.Trim(),
-                                    slug = x.Product.Category.Slug.ToLower().Trim(),
-                                },
-                                created_at = x.Product.CreatedAt,
-                                product_attribute = x.Product.ProductAttributes.Select(e => new ProductAttributeView
-                                {
-                                    id = e.Id,
-                                    product_id = e.ProductId,
-                                    attribute_id = e.AttributeId,
-                                    value_decimal = e.ValueDecimal,
-                                    value_int = e.ValueInt,
-                                    value_text = e.ValueText,
-                                    attribute = new AttributeView
-                                    {
-                                        id = e.Attribute.Id,
-                                        name = e.Attribute.Name,
-                                        slug = e.Attribute.Slug,
-                                        data_type = e.Attribute.DataType,
-                                        unit = e.Attribute.Unit,
-                                        status = e.Attribute.Status,
-                                    }
-                                }).ToHashSet()
+                                id = x.Product.Category.Id,
+                                name = x.Product.Category.Name.Trim(),
+                                slug = x.Product.Category.Slug.ToLower().Trim(),
                             },
-                            product_images = x.ProductImages.Select(e => new ProductImageView
+                            created_at = x.Product.CreatedAt,
+                            product_attribute = x.Product.ProductAttributes.Select(e => new ProductAttributeView
                             {
                                 id = e.Id,
                                 product_id = e.ProductId,
-                                variant_id = e.VariantId,
-                                url = e.Url,
-                            }).ToHashSet(),
-                            variant_attributes = x.VariantAttributes.Select(e => new VariantAttributeView
-                            {
-                                id = e.Id,
-                                variant_id = e.VariantId,
                                 attribute_id = e.AttributeId,
                                 value_decimal = e.ValueDecimal,
                                 value_int = e.ValueInt,
                                 value_text = e.ValueText,
-                                attribute_value_id = e.AttributeValueId,
-                                attribute_value = e.AttributeValue != null ? new AttributeValueView
-                                {
-                                    id = e.AttributeValue.Id,
-                                    attribute_id = e.AttributeValue.AttributeId,
-                                    value = e.AttributeValue.Value ?? string.Empty
-                                } : null,
-                                attribute = e.Attribute != null ? new AttributeView
+                                attribute = new AttributeView
                                 {
                                     id = e.Attribute.Id,
                                     name = e.Attribute.Name,
@@ -542,13 +520,46 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                                     data_type = e.Attribute.DataType,
                                     unit = e.Attribute.Unit,
                                     status = e.Attribute.Status,
-                                } : null
+                                }
                             }).ToHashSet()
+                        },
+                        product_images = x.ProductImages.Select(e => new ProductImageView
+                        {
+                            id = e.Id,
+                            product_id = e.ProductId,
+                            variant_id = e.VariantId,
+                            url = e.Url,
                         }).ToHashSet(),
-                        count = totalCount,
-                    };
-                    
-           
+                        variant_attributes = x.VariantAttributes.Select(e => new VariantAttributeView
+                        {
+                            id = e.Id,
+                            variant_id = e.VariantId,
+                            attribute_id = e.AttributeId,
+                            value_decimal = e.ValueDecimal,
+                            value_int = e.ValueInt,
+                            value_text = e.ValueText,
+                            attribute_value_id = e.AttributeValueId,
+                            attribute_value = e.AttributeValue != null ? new AttributeValueView
+                            {
+                                id = e.AttributeValue.Id,
+                                attribute_id = e.AttributeValue.AttributeId,
+                                value = e.AttributeValue.Value ?? string.Empty
+                            } : null,
+                            attribute = e.Attribute != null ? new AttributeView
+                            {
+                                id = e.Attribute.Id,
+                                name = e.Attribute.Name,
+                                slug = e.Attribute.Slug,
+                                data_type = e.Attribute.DataType,
+                                unit = e.Attribute.Unit,
+                                status = e.Attribute.Status,
+                            } : null
+                        }).ToHashSet()
+                    }).ToHashSet(),
+                    count = totalCount,
+                    max = maxPriceInDb,
+                    min = 0
+                };
             }
             catch (SqlException ex)
             {
@@ -559,7 +570,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 throw;
             }
         }
-  
+
         public bool Update(ProductVariantView entity)
         {
             try

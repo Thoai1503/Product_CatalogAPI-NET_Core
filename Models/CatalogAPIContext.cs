@@ -62,6 +62,7 @@ public partial class CatalogAPIContext : DbContext
 
     public virtual DbSet<Ward> Wards { get; set; }
 
+
     public override int SaveChanges()
     {
         foreach (var entry in ChangeTracker.Entries<Category>())
@@ -500,7 +501,6 @@ public partial class CatalogAPIContext : DbContext
         }
     }
 
-
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Server=103.90.225.130,1433;Database=Catalog_ElectricStoreDB;User ID=sa;Password=Thoaivip@13;TrustServerCertificate=True;");
@@ -548,7 +548,7 @@ public partial class CatalogAPIContext : DbContext
 
         modelBuilder.Entity<Brand>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__brands__3213E83FBBDEC841");
+            entity.HasKey(e => e.Id).HasName("PK__brands__3213E83F9C09A1DE");
 
             entity.ToTable("brands");
 
@@ -724,7 +724,7 @@ public partial class CatalogAPIContext : DbContext
                 .HasColumnType("decimal(18, 0)")
                 .HasColumnName("discount");
             entity.Property(e => e.Status)
-                .HasDefaultValue(2)
+                .HasDefaultValue(1)
                 .HasColumnName("status");
             entity.Property(e => e.Total)
                 .HasColumnType("decimal(18, 0)")
@@ -801,6 +801,7 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AttributeId).HasColumnName("attribute_id");
+            entity.Property(e => e.AttributeValueId).HasColumnName("attribute_value_id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
             entity.Property(e => e.ValueDecimal)
                 .HasColumnType("decimal(18, 0)")
@@ -892,7 +893,7 @@ public partial class CatalogAPIContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__users__3213E83FA25F67D3");
+            entity.HasKey(e => e.Id).HasName("PK__users__3213E83FF5859A13");
 
             entity.ToTable("users");
 
@@ -922,7 +923,7 @@ public partial class CatalogAPIContext : DbContext
 
         modelBuilder.Entity<UserAddress>(entity =>
         {
-            entity.ToTable("user_addresses", tb => tb.HasTrigger("trg_user_addresses_default"));
+            entity.ToTable("user_addresses");
 
             entity.HasIndex(e => e.UserId, "IX_user_addresses_user_id");
 

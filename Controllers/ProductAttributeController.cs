@@ -47,6 +47,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
             en.ValueInt = entity.value_int;
             en.ValueText = entity.value_text;
             en.ValueDecimal = entity.value_decimal;
+            en.AttributeValueId = entity.attribute_value_id;
             var result = _repository.Update(en);
 
                 return Ok(result);

@@ -129,6 +129,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                         value_decimal = e.ValueDecimal,
                         value_int = e.ValueInt,
                         value_text = e.ValueText,
+                        attribute_value_id = e.AttributeValueId,
                         attribute = new AttributeView
                         {
                             id = e.Attribute.Id,

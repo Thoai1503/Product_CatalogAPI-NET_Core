@@ -71,6 +71,7 @@ namespace CatalogServiceAPI_Electric_Store.Repository
                 {
                     en.AttributeId = entity.AttributeId;
                     en.ProductId = entity.ProductId;
+                    en.AttributeValueId = entity.AttributeValueId;
                     en.ValueInt = entity.ValueInt;
                     en.ValueText = entity.ValueText;
                     en.ValueDecimal = entity.ValueDecimal;

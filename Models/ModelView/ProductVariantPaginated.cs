@@ -5,5 +5,7 @@
         public HashSet<ProductVariantView> data { get; set; }
          
         public int count { get; set; }
+        public decimal max { get; set; }
+        public decimal min { get; set; }
     }
 }
