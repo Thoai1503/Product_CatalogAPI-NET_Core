@@ -174,3 +174,4 @@ C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\bin\Debug\net8.0\Algorithm.Core.dll
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\bin\Debug\net8.0\Algorithm.Core.pdb
 C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\obj\Debug\net8.0\staticwebassets.upToDateCheck.txt
+C:\project_NET\CatalogServiceAPI_Electric-Store\CatalogServiceAPI_Electric-Store\obj\Debug\net8.0\swae.build.ex.cache

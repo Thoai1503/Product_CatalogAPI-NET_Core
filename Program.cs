@@ -38,7 +38,10 @@ builder.Services.AddScoped<CartRepository>();
 builder.Services.AddScoped<AttributeValueRepository>();
 builder.Services.AddScoped<CategoryBrandRepository>();
 
+
 var app = builder.Build();
+//app.Urls.Add("http://172.27.48.1:5000");
+//app.Urls.Add("http://localhost:5000");
 
 //app.UseMiddleware<ApiKeyMiddleware>();
 
