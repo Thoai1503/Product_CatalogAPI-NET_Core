@@ -27,7 +27,7 @@ namespace CatalogServiceAPI_Electric_Store.Controllers
         }
 
         // GET api/<CategoryController>/5
-        [HttpGet("{id}")]
+        [HttpGet("{id}")]   
         public string Get(int id)
         {
             return "value";

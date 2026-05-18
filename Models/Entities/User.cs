@@ -17,7 +17,7 @@ public partial class User
 
     public int Status { get; set; }
 
-    public byte[]? CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
 
     public int Id { get; set; }
 

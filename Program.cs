@@ -24,7 +24,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CatalogAPIContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 36))));
 builder.Services.AddScoped<CategoryRepository>(); 
 builder.Services.AddScoped<AttributeRepository>();
 builder.Services.AddScoped<CategoryAttributeRepository>();
@@ -44,6 +46,22 @@ var app = builder.Build();
 //app.Urls.Add("http://localhost:5000");
 
 //app.UseMiddleware<ApiKeyMiddleware>();
+//var hc = builder.Services.AddHealthChecks();
+
+
+//hc.AddCheck("API Health Check", () =>
+//{
+//    // Perform a simple check to determine if the API is healthy
+//    bool isHealthy = true; // Replace with actual health check logic
+//    if (isHealthy)
+//    {
+//        return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("The API is healthy.");
+//    }
+//    else
+//    {
+//        return Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy("The API is unhealthy.");
+//    }
+//});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

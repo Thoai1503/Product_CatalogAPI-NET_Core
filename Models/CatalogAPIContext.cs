@@ -503,7 +503,9 @@ public partial class CatalogAPIContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=103.90.225.130,1433;Database=Catalog_ElectricStoreDB;User ID=sa;Password=Thoaivip@13;TrustServerCertificate=True;");
+        => optionsBuilder.UseMySql(
+            "Server=103.90.225.130;Port=3306;Database=Catalog_ElectricStoreDB;User=developer;Password=Thoai150396;",
+            new MySqlServerVersion(new Version(8, 0, 36)));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -594,7 +596,7 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(sysutcdatetime())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnName("created_at");
             entity.Property(e => e.Level).HasColumnName("level");
             entity.Property(e => e.Name)
@@ -688,7 +690,7 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.AvailableQuantity).HasColumnName("available_quantity");
             entity.Property(e => e.ReversedQuantity).HasColumnName("reversed_quantity");
             entity.Property(e => e.UpdateAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("update_at");
             entity.Property(e => e.VariantId).HasColumnName("variant_id");
@@ -702,7 +704,7 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.ChangeQuantity).HasColumnName("change_quantity");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Id).HasColumnName("id");
@@ -717,7 +719,7 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.AddressId).HasColumnName("address_id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Discount)
@@ -764,7 +766,7 @@ public partial class CatalogAPIContext : DbContext
             entity.Property(e => e.BrandId).HasColumnName("brand_id");
             entity.Property(e => e.CategoryId).HasColumnName("category_id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Description)
@@ -845,7 +847,7 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.Name)
@@ -899,8 +901,8 @@ public partial class CatalogAPIContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CreatedAt)
-                .IsRowVersion()
-                .IsConcurrencyToken()
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
                 .HasColumnName("created_at");
             entity.Property(e => e.Email)
                 .HasMaxLength(50)
@@ -935,7 +937,7 @@ public partial class CatalogAPIContext : DbContext
                 .HasDefaultValue(1)
                 .HasColumnName("address_type");
             entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime")
                 .HasColumnName("created_at");
             entity.Property(e => e.DistrictId).HasColumnName("district_id");
